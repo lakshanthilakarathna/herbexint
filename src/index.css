@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Prevent blur and improve rendering quality */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix for subpixel rendering issues (removed transform to fix button clicks) */
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Liquor Company Theme - HERB Toddy */
+    --background: 40 40% 98%;
+    --foreground: 25 40% 15%;
+
+    /* Glass cards with subtle tint */
+    --card: 0 0% 100%;
+    --card-foreground: 25 40% 15%;
+    --card-glass: 30 40% 97%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 40% 15%;
+
+    /* Amber Primary - Liquor Company Brand */
+    --primary: 30 60% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 30 60% 75%;
+    --primary-glow: 30 60% 80%;
+
+    /* Rich Brown Secondary */
+    --secondary: 25 50% 30%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-accent: 25 60% 40%;
+
+    /* Warm Copper Accent */
+    --accent: 20 70% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 20 60% 90%;
+
+    /* Muted warm tones */
+    --muted: 30 40% 96%;
+    --muted-foreground: 25 20% 50%;
+
+    /* Success green */
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 142 60% 92%;
+
+    /* Warning gold */
+    --warning: 45 95% 60%;
+    --warning-foreground: 25 40% 15%;
+    --warning-soft: 45 85% 92%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 30% 85%;
+    --input: 30 30% 92%;
+    --ring: 30 60% 65%;
+
+    --radius: 1rem;
+
+    /* Glass-morphism effects */
+    --glass-bg: 30 40% 97%;
+    --glass-border: 30 25% 90%;
+    
+    /* Gradients - Liquor Company Theme */
+    --gradient-liquor: linear-gradient(135deg, hsl(30 60% 65%), hsl(45 85% 60%));
+    --gradient-warm: linear-gradient(135deg, hsl(20 70% 50%), hsl(30 60% 65%));
+    --gradient-mint: linear-gradient(135deg, hsl(25 50% 30%), hsl(25 60% 40%));
+    --gradient-bg: linear-gradient(180deg, hsl(40 50% 98%), hsl(30 40% 96%));
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -2px hsl(30 40% 60% / 0.15);
+    --shadow-glass: 0 8px 32px 0 hsl(30 40% 60% / 0.1);
+    --shadow-glow: 0 0 40px hsl(30 60% 65% / 0.3);
+    --shadow-card: 0 2px 12px -2px hsl(30 40% 60% / 0.08);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .dark {
+    --background: 25 30% 10%;
+    --foreground: 30 30% 95%;
+
+    --card: 25 28% 14%;
+    --card-foreground: 30 30% 95%;
+    --card-glass: 25 30% 16%;
+
+    --popover: 25 28% 14%;
+    --popover-foreground: 30 30% 95%;
+
+    --primary: 30 60% 70%;
+    --primary-foreground: 25 30% 10%;
+    --primary-light: 30 60% 80%;
+    --primary-glow: 30 60% 85%;
+
+    --secondary: 25 45% 35%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-accent: 25 50% 45%;
+
+    --accent: 20 70% 55%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 20 50% 25%;
+
+    --muted: 25 25% 20%;
+    --muted-foreground: 30 20% 65%;
+
+    --success: 142 70% 50%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 142 40% 25%;
+
+    --warning: 45 85% 60%;
+    --warning-foreground: 25 30% 10%;
+    --warning-soft: 45 60% 25%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 25 25% 22%;
+    --input: 25 25% 18%;
+    --ring: 30 60% 70%;
+
+    --glass-bg: 25 30% 16%;
+    --glass-border: 25 25% 23%;
+    
+    --shadow-soft: 0 4px 20px -2px hsl(30 40% 5% / 0.5);
+    --shadow-glass: 0 8px 32px 0 hsl(30 40% 5% / 0.4);
+    --shadow-glow: 0 0 40px hsl(30 60% 55% / 0.2);
+    --shadow-card: 0 2px 12px -2px hsl(30 40% 5% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1;
+  }
+
+
+
+  /* Prevent blurry borders and lines (removed transform to fix button clicks) */
+  * {
+    border-image: none;
+  }
+
+}
