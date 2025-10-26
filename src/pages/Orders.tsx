@@ -487,36 +487,23 @@ const Orders: React.FC = () => {
         return;
       }
 
-      // Automatically capture location for the order
+      // Automatically capture location for the order (silently - don't block order creation)
       let locationData = undefined;
-      try {
-        toast.info('Getting your GPS location... Please wait', { duration: 3000 });
-        console.log('🌍 Attempting to get GPS location for order tracking...');
-        
-        const location = await getLocationWithFallback();
-        if (location) {
-          locationData = {
-            latitude: location.latitude,
-            longitude: location.longitude,
-            address: location.address,
-            timestamp: new Date().toISOString()
-          };
-          
-          toast.success(`GPS location captured: ${location.address}`, { duration: 4000 });
-          console.log('✅ GPS location data captured:', locationData);
-        }
-      } catch (error: any) {
-        console.error('❌ GPS location capture failed:', error);
-        const errorMessage = error?.message || 'Unknown error';
-        
-        if (errorMessage.includes('HTTPS')) {
-          toast.error('GPS requires HTTPS. Your site has HTTPS enabled. Please refresh the page.', { duration: 8000 });
-        } else if (errorMessage.includes('Permission denied')) {
-          toast.error('Location access denied. Please allow location access in your browser settings and refresh.', { duration: 8000 });
-        } else {
-          toast.error(`GPS location failed: ${errorMessage}. Order will be created without location.`, { duration: 6000 });
-        }
-        console.log('⚠️ Order will be created without location tracking');
+      console.log('🌍 Attempting to get GPS location for order tracking...');
+      
+      const location = await getLocationWithFallback();
+      if (location) {
+        locationData = {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          address: location.address,
+          timestamp: new Date().toISOString()
+        };
+        toast.success(`GPS location captured: ${location.address}`, { duration: 3000 });
+        console.log('✅ Location data captured:', locationData);
+      } else {
+        console.log('ℹ️ No GPS location - order will be created without location tracking');
+        // Don't show warning - just silently proceed without location
       }
 
 
