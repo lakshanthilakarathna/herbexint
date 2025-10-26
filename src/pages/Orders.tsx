@@ -683,6 +683,12 @@ const Orders: React.FC = () => {
     if (!selectedOrder) return;
 
     try {
+      // Validate: If status is shipped, must have delivery person assigned
+      if (selectedOrder.status === 'shipped' && !selectedOrder.assigned_to) {
+        toast.error('Orders with status "Shipped" must be assigned to a delivery person');
+        return;
+      }
+
       // Get the original order to compare item quantities
       const originalOrder = orders.find(o => o.id === selectedOrder.id);
       
@@ -1731,10 +1737,12 @@ const Orders: React.FC = () => {
                 </div>
               )}
 
-              {/* Assign to Delivery Personnel - Only Admin can edit */}
-              {user?.role_id === 'admin-role-id' && (
+              {/* Assign to Delivery Personnel - Only Admin can edit, Only show when status is shipped */}
+              {user?.role_id === 'admin-role-id' && selectedOrder.status === 'shipped' && (
                 <div>
-                  <Label htmlFor="edit-assigned-to">Assign to Delivery Person</Label>
+                  <Label htmlFor="edit-assigned-to">
+                    Assign to Delivery Person <span className="text-red-500">*</span>
+                  </Label>
                   <Select 
                     value={selectedOrder.assigned_to || 'unassigned'} 
                     onValueChange={(value) => {
@@ -1742,10 +1750,9 @@ const Orders: React.FC = () => {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select delivery person" />
+                      <SelectValue placeholder="Select delivery person (required)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
                       {users
                         .filter((u: any) => {
                           const isDelivery = u.role_name === 'Delivery Personnel' || u.role_id === 'delivery-role-id';
@@ -1759,6 +1766,9 @@ const Orders: React.FC = () => {
                         ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Orders with status "Shipped" must be assigned to a delivery person
+                  </p>
                 </div>
               )}
 
