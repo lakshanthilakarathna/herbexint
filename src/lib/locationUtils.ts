@@ -116,15 +116,21 @@ export const getCurrentLocation = (options: LocationOptions = {}): Promise<Locat
 export const getLocationWithFallback = async (options: LocationOptions = {}): Promise<LocationData | null> => {
   console.log('🌍 Attempting to get location with fallback strategies...');
   
+  // Check if we're on HTTPS or localhost
+  const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (!isSecure) {
+    console.warn('⚠️ Geolocation requires HTTPS or localhost. Current protocol:', window.location.protocol);
+  }
+  
   const isMobile = isMobileDevice();
   let lastError: Error | null = null;
   
   // Strategy 1: High accuracy with short timeout
   try {
-    console.log('📍 Strategy 1: High accuracy (10s timeout)');
+    console.log('📍 Strategy 1: High accuracy (8s timeout)');
     const location = await getCurrentLocation({
       enableHighAccuracy: true,
-      timeout: 10000,
+      timeout: 8000,
       maximumAge: 0
     });
     console.log('✅ Location captured with high accuracy:', location);
@@ -136,10 +142,10 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
   
   // Strategy 2: Low accuracy with medium timeout
   try {
-    console.log('📍 Strategy 2: Low accuracy (15s timeout)');
+    console.log('📍 Strategy 2: Low accuracy (12s timeout)');
     const location = await getCurrentLocation({
       enableHighAccuracy: false,
-      timeout: 15000,
+      timeout: 12000,
       maximumAge: 300000 // 5 minutes
     });
     console.log('✅ Location captured with low accuracy:', location);
@@ -151,10 +157,10 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
   
   // Strategy 3: Cached location with long timeout
   try {
-    console.log('📍 Strategy 3: Cached location (20s timeout)');
+    console.log('📍 Strategy 3: Cached location (15s timeout)');
     const location = await getCurrentLocation({
       enableHighAccuracy: false,
-      timeout: 20000,
+      timeout: 15000,
       maximumAge: 600000 // 10 minutes
     });
     console.log('✅ Location captured from cache:', location);
@@ -164,9 +170,64 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
     lastError = error as Error;
   }
   
+  // Strategy 4: Very permissive settings
+  try {
+    console.log('📍 Strategy 4: Very permissive (20s timeout)');
+    const location = await getCurrentLocation({
+      enableHighAccuracy: false,
+      timeout: 20000,
+      maximumAge: 1800000 // 30 minutes
+    });
+    console.log('✅ Location captured with permissive settings:', location);
+    return location;
+  } catch (error) {
+    console.warn('❌ Strategy 4 failed:', error);
+    lastError = error as Error;
+  }
+  
   // All strategies failed
-  console.log('❌ All location strategies failed');
+  console.log('❌ All location strategies failed. Last error:', lastError?.message);
   return null;
+};
+
+/**
+ * Test geolocation availability and permissions
+ */
+export const testGeolocationAvailability = (): Promise<{available: boolean, error?: string}> => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ available: false, error: 'Geolocation not supported' });
+      return;
+    }
+
+    // Check if we're on HTTPS or localhost
+    const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isSecure) {
+      resolve({ available: false, error: 'Geolocation requires HTTPS or localhost' });
+      return;
+    }
+
+    // Try to get current position with minimal options
+    navigator.geolocation.getCurrentPosition(
+      () => resolve({ available: true }),
+      (error) => {
+        let errorMessage = 'Unknown error';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permission denied';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Position unavailable';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Request timeout';
+            break;
+        }
+        resolve({ available: false, error: errorMessage });
+      },
+      { timeout: 5000, enableHighAccuracy: false, maximumAge: 60000 }
+    );
+  });
 };
 
 /**

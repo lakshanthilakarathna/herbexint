@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star, MapPin } from 'lucide-react';
-import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
+import { getLocationWithFallback, LocationData, testGeolocationAvailability } from '@/lib/locationUtils';
 
 interface Order {
   id: string;
@@ -473,26 +473,33 @@ const Orders: React.FC = () => {
       // Automatically capture location for the order
       let locationData = undefined;
       try {
-        toast.info('Getting your location... Please wait', { duration: 3000 });
-        console.log('🌍 Attempting to get location for order tracking...');
-        
-        const location = await getLocationWithFallback();
-        if (location) {
-          locationData = {
-            latitude: location.latitude,
-            longitude: location.longitude,
-            address: location.address,
-            timestamp: new Date().toISOString()
-          };
-          toast.success(`Location captured: ${location.address}`, { duration: 4000 });
-          console.log('✅ Location data captured:', locationData);
+        // First test if geolocation is available
+        const availability = await testGeolocationAvailability();
+        if (!availability.available) {
+          console.log('⚠️ Geolocation not available:', availability.error);
+          toast.warning(`Location not available: ${availability.error}. Order will be created without location tracking.`, { duration: 6000 });
         } else {
-          console.log('ℹ️ No location data available - order will be created without location tracking');
-          toast.warning('Could not capture location. Order will be created without location tracking.', { duration: 5000 });
+          toast.info('Getting your location... Please wait', { duration: 3000 });
+          console.log('🌍 Attempting to get location for order tracking...');
+          
+          const location = await getLocationWithFallback();
+          if (location) {
+            locationData = {
+              latitude: location.latitude,
+              longitude: location.longitude,
+              address: location.address,
+              timestamp: new Date().toISOString()
+            };
+            toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+            console.log('✅ Location data captured:', locationData);
+          } else {
+            console.log('ℹ️ No location data available - order will be created without location tracking');
+            toast.warning('Could not capture location. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+          }
         }
       } catch (error) {
         console.log('ℹ️ Location capture failed - order will be created without location tracking:', error);
-        toast.warning('Could not capture location. Order will be created without location tracking.', { duration: 5000 });
+        toast.warning('Location capture failed. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
       }
 
 
