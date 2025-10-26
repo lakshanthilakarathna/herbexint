@@ -116,12 +116,6 @@ export const getCurrentLocation = (options: LocationOptions = {}): Promise<Locat
 export const getLocationWithFallback = async (options: LocationOptions = {}): Promise<LocationData | null> => {
   console.log('🌍 Attempting to get location with fallback strategies...');
   
-  // Check if we're on HTTPS or localhost
-  const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!isSecure) {
-    console.warn('⚠️ Geolocation requires HTTPS or localhost. Current protocol:', window.location.protocol);
-  }
-  
   const isMobile = isMobileDevice();
   let lastError: Error | null = null;
   
@@ -200,11 +194,14 @@ export const testGeolocationAvailability = (): Promise<{available: boolean, erro
       return;
     }
 
-    // Check if we're on HTTPS or localhost
-    const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isSecure) {
-      resolve({ available: false, error: 'Geolocation requires HTTPS or localhost' });
-      return;
+    // Modern browsers support geolocation over HTTP if permissions are granted
+    // Only check for HTTPS if we're not in a secure context
+    const isSecureContext = window.isSecureContext || window.location.protocol === 'https:';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (!isSecureContext && !isLocalhost) {
+      // Try anyway - modern browsers may still allow it
+      console.log('⚠️ Not a secure context, but attempting geolocation anyway...');
     }
 
     // Try to get current position with minimal options
@@ -214,13 +211,13 @@ export const testGeolocationAvailability = (): Promise<{available: boolean, erro
         let errorMessage = 'Unknown error';
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Permission denied';
+            errorMessage = 'Permission denied - Please allow location access';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Position unavailable';
+            errorMessage = 'Position unavailable - Please check your GPS';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Request timeout';
+            errorMessage = 'Request timeout - Please try again';
             break;
         }
         resolve({ available: false, error: errorMessage });
