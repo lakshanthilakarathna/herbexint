@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
-import { Plus, Search, Filter, Eye, Edit, Trash2, Clock, Camera, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink, MapPin } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
 
@@ -68,8 +68,6 @@ const Visits: React.FC = () => {
     photos: []
   });
   const [editVisit, setEditVisit] = useState<Partial<Visit>>({});
-  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   useEffect(() => {
     fetchVisits();
@@ -107,81 +105,7 @@ const Visits: React.FC = () => {
   };
 
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length + selectedPhotos.length > 3) {
-      toast.error('Maximum 3 photos allowed');
-      return;
-    }
 
-    const newFiles = [...selectedPhotos, ...files];
-    setSelectedPhotos(newFiles);
-
-    // Create previews
-    const newPreviews: string[] = [];
-    newFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        newPreviews.push(e.target?.result as string);
-        if (newPreviews.length === newFiles.length) {
-          setPhotoPreviews(newPreviews);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removePhoto = (index: number) => {
-    const newFiles = selectedPhotos.filter((_, i) => i !== index);
-    const newPreviews = photoPreviews.filter((_, i) => i !== index);
-    setSelectedPhotos(newFiles);
-    setPhotoPreviews(newPreviews);
-  };
-
-  const compressImage = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          // Resize if too large (max 800px on longest side)
-          const maxDimension = 800;
-          if (width > height && width > maxDimension) {
-            height = (height * maxDimension) / width;
-            width = maxDimension;
-          } else if (height > maxDimension) {
-            width = (width * maxDimension) / height;
-            height = maxDimension;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              });
-              resolve(compressedFile);
-            } else {
-              reject(new Error('Failed to compress image'));
-            }
-          }, 'image/jpeg', 0.7); // 70% quality
-        };
-        img.onerror = reject;
-      };
-      reader.onerror = reject;
-    });
-  };
 
   const handleCreateVisit = async () => {
     try {
@@ -263,8 +187,6 @@ const Visits: React.FC = () => {
         notes: '',
         photos: []
       });
-      setSelectedPhotos([]);
-      setPhotoPreviews([]);
       
       toast.success('Visit created successfully!');
     } catch (error) {
@@ -491,53 +413,6 @@ const Visits: React.FC = () => {
                     placeholder="Add visit notes..."
                     rows={3}
                   />
-                </div>
-
-                {/* Photo Upload */}
-                <div>
-                  <Label>Photos (Optional, max 3)</Label>
-                  <div className="mt-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handlePhotoSelect}
-                      className="hidden"
-                      id="photo-upload"
-                    />
-                    <label
-                      htmlFor="photo-upload"
-                      className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
-                    >
-                      <div className="text-center">
-                        <Camera className="mx-auto h-8 w-8 text-gray-400" />
-                        <p className="mt-2 text-sm text-gray-500">Click to upload photos</p>
-                      </div>
-                    </label>
-                    
-                    {photoPreviews.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        {photoPreviews.map((preview, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={preview}
-                              alt={`Preview ${index + 1}`}
-                              className="w-full h-20 object-cover rounded border"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                              onClick={() => removePhoto(index)}
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-2 pt-4 border-t">
