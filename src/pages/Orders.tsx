@@ -27,6 +27,18 @@ interface Order {
   notes?: string;
   created_by: string;
   approved_by?: string;
+  assigned_to?: string; // Delivery person ID
+  delivery_confirmation?: {
+    timestamp: string;
+    location?: {
+      latitude: number;
+      longitude: number;
+      address: string;
+    };
+    photo?: string; // Base64 or URL
+    signature?: string; // Base64 or URL
+    delivery_notes?: string;
+  };
   location?: {
     latitude: number;
     longitude: number;
