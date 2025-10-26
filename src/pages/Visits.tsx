@@ -113,35 +113,17 @@ const Visits: React.FC = () => {
     try {
       setIsCapturingLocation(true);
       
-      // Check location compatibility first
-      const compatibility = checkLocationCompatibility();
-      console.log('🔍 Location compatibility check:', compatibility);
-      
-      if (!compatibility.supported) {
-        throw new Error('Geolocation not supported by this browser');
-      }
-      
-      toast.info('Getting your location...', { duration: 3000 });
+      console.log('🌍 Attempting to get location for visit tracking...');
       const location = await getLocationWithFallback();
       if (location) {
         setLocationData(location);
-        toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+        toast.success(`Location captured: ${location.address}`, { duration: 3000 });
+        console.log('✅ Location data captured:', location);
+      } else {
+        console.log('ℹ️ No location data available - visit will be created without location tracking');
       }
     } catch (error) {
-      console.warn('Could not get location:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Location not available';
-      
-      // Show mobile-specific instructions if on mobile
-      const compatibility = checkLocationCompatibility();
-      if (compatibility.isMobile) {
-        console.log('📱 Mobile device detected, showing location instructions');
-        showMobileLocationInstructions();
-      }
-      
-      toast.warning(`${errorMessage} - Visit will be created without location tracking`, { 
-        duration: 8000,
-        description: compatibility.isMobile ? 'Check the console for mobile setup instructions' : undefined
-      });
+      console.log('ℹ️ Location not available - visit will be created without location tracking');
     } finally {
       setIsCapturingLocation(false);
     }

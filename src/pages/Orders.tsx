@@ -472,45 +472,26 @@ const Orders: React.FC = () => {
         return;
       }
 
-      // Get current location with better user feedback
-      let locationData = undefined;
-      try {
-        // Check location compatibility first
-        const compatibility = checkLocationCompatibility();
-        console.log('🔍 Location compatibility check:', compatibility);
-        
-        if (!compatibility.supported) {
-          throw new Error('Geolocation not supported by this browser');
+        // Get current location (simplified - no error messages)
+        let locationData = undefined;
+        try {
+          console.log('🌍 Attempting to get location for order tracking...');
+          const location = await getLocationWithFallback();
+          if (location) {
+            locationData = {
+              latitude: location.latitude,
+              longitude: location.longitude,
+              address: location.address,
+              timestamp: new Date().toISOString()
+            };
+            toast.success(`Location captured: ${location.address}`, { duration: 3000 });
+            console.log('✅ Location data saved:', locationData);
+          } else {
+            console.log('ℹ️ No location data available - order will be created without location tracking');
+          }
+        } catch (error) {
+          console.log('ℹ️ Location not available - order will be created without location tracking');
         }
-        
-        toast.info('Getting your location for order tracking...', { duration: 3000 });
-        const location = await getLocationWithFallback();
-        if (location) {
-          locationData = {
-            latitude: location.latitude,
-            longitude: location.longitude,
-            address: location.address,
-            timestamp: new Date().toISOString()
-          };
-          toast.success(`Location captured: ${location.address}`, { duration: 4000 });
-          console.log('Location data saved:', locationData);
-        }
-      } catch (error) {
-        console.warn('Could not get location:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Location not available';
-        
-        // Show mobile-specific instructions if on mobile
-        const compatibility = checkLocationCompatibility();
-        if (compatibility.isMobile) {
-          console.log('📱 Mobile device detected, showing location instructions');
-          showMobileLocationInstructions();
-        }
-        
-        toast.warning(`${errorMessage} - Order will be created without location tracking`, { 
-          duration: 8000,
-          description: compatibility.isMobile ? 'Check the console for mobile setup instructions' : undefined
-        });
-      }
 
       // Mock order creation
       const orderNumber = `ORD-${String(orders.length + 1).padStart(3, '0')}`;

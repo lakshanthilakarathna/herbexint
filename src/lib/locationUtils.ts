@@ -49,7 +49,7 @@ function getDeviceOptions(options: LocationOptions = {}): LocationOptions {
 
 /**
  * Get current location with comprehensive error handling
- * Optimized for mobile and desktop browsers
+ * Optimized for mobile and desktop browsers - SIMPLIFIED VERSION
  */
 export const getCurrentLocation = (options: LocationOptions = {}): Promise<LocationData> => {
   const opts = getDeviceOptions(options);
@@ -63,77 +63,37 @@ export const getCurrentLocation = (options: LocationOptions = {}): Promise<Locat
     }
 
     console.log(`🌍 Attempting to get current location... (${isMobile ? 'Mobile' : 'Desktop'})`);
-    console.log('📱 Device info:', {
-      userAgent: navigator.userAgent,
-      isMobile,
-      hasTouch: navigator.maxTouchPoints > 0,
-      screenWidth: window.innerWidth
-    });
     
-    // For mobile, try to request permission first
-    if (isMobile && navigator.permissions) {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        console.log('📱 Mobile permission state:', result.state);
+    // Simplified approach - just try to get location without permission checks
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        console.log('✅ Location obtained successfully:', position.coords);
+        const { latitude, longitude } = position.coords;
         
-        if (result.state === 'denied') {
-          reject(new Error('Location access denied. Please enable location permissions in your browser settings and refresh the page.'));
-          return;
+        // Validate coordinates
+        if (latitude === 0 && longitude === 0) {
+          console.warn('⚠️ Received zero coordinates, this might be a default/fallback location');
         }
         
-        // Continue with location request
-        requestLocation();
-      }).catch(() => {
-        // Permission API not supported, continue with location request
-        console.log('📱 Permission API not supported, proceeding with location request');
-        requestLocation();
-      });
-    } else {
-      // Desktop or no permission API, proceed directly
-      requestLocation();
-    }
-    
-    function requestLocation() {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          console.log('✅ Location obtained successfully:', position.coords);
-          const { latitude, longitude } = position.coords;
-          
-          // Validate coordinates
-          if (latitude === 0 && longitude === 0) {
-            console.warn('⚠️ Received zero coordinates, this might be a default/fallback location');
-          }
-          
-          try {
-            // Try to get address from coordinates (reverse geocoding)
-            const address = await getAddressFromCoordinates(latitude, longitude);
-            resolve({ latitude, longitude, address });
-          } catch (error) {
-            console.warn('⚠️ Reverse geocoding failed, using coordinates only:', error);
-            resolve({ 
-              latitude, 
-              longitude, 
-              address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` 
-            });
-          }
-        },
-        (error) => {
-          console.log('❌ Geolocation failed, analyzing error...');
-          console.log('🔍 Error details:', {
-            code: error.code,
-            message: error.message,
-            isMobile,
-            userAgent: navigator.userAgent
+        try {
+          // Try to get address from coordinates (reverse geocoding)
+          const address = await getAddressFromCoordinates(latitude, longitude);
+          resolve({ latitude, longitude, address });
+        } catch (error) {
+          console.warn('⚠️ Reverse geocoding failed, using coordinates only:', error);
+          resolve({ 
+            latitude, 
+            longitude, 
+            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` 
           });
-          
-          // Analyze the error and provide specific guidance
-          const errorInfo = analyzeGeolocationError(error, isMobile);
-          console.log('🔍 Error analysis:', errorInfo);
-          
-          reject(new Error(errorInfo.message));
-        },
-        opts
-      );
-    }
+        }
+      },
+      (error) => {
+        console.log('❌ Geolocation failed:', error.message);
+        reject(new Error(error.message));
+      },
+      opts
+    );
   });
 };
 
@@ -306,34 +266,26 @@ export const getMobileLocation = async (options: LocationOptions = {}): Promise<
 };
 
 /**
- * Get location with fallback handling
+ * Get location with fallback handling - ULTRA SIMPLIFIED VERSION
+ * This version never throws errors and always returns null if location fails
  */
 export const getLocationWithFallback = async (options: LocationOptions = {}): Promise<LocationData | null> => {
-  const isMobile = isMobileDevice();
+  console.log('🌍 Attempting to get location (ultra simplified approach)...');
   
   try {
-    if (isMobile) {
-      return await getMobileLocation(options);
-    } else {
-      return await getCurrentLocation(options);
-    }
+    // Try with very permissive options first
+    const permissiveOptions = {
+      enableHighAccuracy: false, // Less accurate but more likely to work
+      timeout: 5000, // Short timeout
+      maximumAge: 600000 // Accept very old location data (10 minutes)
+    };
+    
+    const location = await getCurrentLocation(permissiveOptions);
+    console.log('✅ Location captured successfully:', location);
+    return location;
   } catch (error) {
-    console.warn('Location capture failed:', error);
-    
-    // Check permissions to provide better error message
-    const permissionState = await checkLocationPermissions();
-    
-    if (permissionState === 'denied') {
-      const isMobile = isMobileDevice();
-      if (isMobile) {
-        throw new Error('Location access denied. Please enable location permissions for this website in your browser settings and refresh the page.');
-      } else {
-        throw new Error('Location access denied. Please enable location permissions in your browser settings and refresh the page.');
-      }
-    }
-    
-    // Re-throw the original error
-    throw error;
+    console.log('ℹ️ Location not available, continuing without location tracking');
+    return null;
   }
 };
 
