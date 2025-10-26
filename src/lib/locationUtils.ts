@@ -175,20 +175,22 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
   const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
   if (!isSecure) {
-    console.log('⚠️ HTTP detected - geolocation may not work. Trying IP-based location...');
-    // Try IP-based location for HTTP connections
-    const ipLocation = await getLocationFromIP();
-    if (ipLocation) {
-      return ipLocation;
+    console.log('⚠️ HTTP detected - GPS geolocation requires HTTPS. Attempting GPS anyway...');
+    // Try GPS first even on HTTP - some browsers may allow it
+    try {
+      console.log('📍 Attempting GPS geolocation on HTTP...');
+      const location = await getCurrentLocation({
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+      console.log('✅ GPS location captured on HTTP:', location);
+      return location;
+    } catch (error) {
+      console.log('❌ GPS failed on HTTP:', error);
+      // Show helpful error message for HTTPS requirement
+      throw new Error('GPS location requires HTTPS. Please enable HTTPS on your server or use localhost for GPS location tracking.');
     }
-    
-    // Fallback to Colombo if IP location fails
-    console.log('⚠️ IP location failed, using fallback location');
-    return {
-      latitude: 6.9271, // Colombo, Sri Lanka coordinates
-      longitude: 79.8612,
-      address: 'Colombo, Sri Lanka (Approximate location - HTTP connection)'
-    };
   }
   
   // Strategy 1: High accuracy with short timeout
@@ -317,20 +319,21 @@ export const testLocationManually = (): Promise<LocationData | null> => {
     const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
     if (!isSecure) {
-      console.log('⚠️ HTTP detected in test - trying IP-based location');
-      const ipLocation = await getLocationFromIP();
-      if (ipLocation) {
-        resolve(ipLocation);
+      console.log('⚠️ HTTP detected in test - attempting GPS geolocation...');
+      try {
+        const location = await getCurrentLocation({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+        console.log('✅ GPS location captured on HTTP:', location);
+        resolve(location);
+        return;
+      } catch (error) {
+        console.log('❌ GPS failed on HTTP:', error);
+        resolve(null);
         return;
       }
-      
-      console.log('⚠️ IP location failed in test, using fallback');
-      resolve({
-        latitude: 6.9271, // Colombo, Sri Lanka coordinates
-        longitude: 79.8612,
-        address: 'Colombo, Sri Lanka (Approximate location - HTTP connection)'
-      });
-      return;
     }
     
     if (!navigator.geolocation) {

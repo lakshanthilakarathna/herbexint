@@ -511,11 +511,15 @@ const Orders: React.FC = () => {
           console.log('✅ Location data captured:', locationData);
         } else {
           console.log('ℹ️ No location data available - order will be created without location tracking');
-          toast.warning('Could not capture location. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+          toast.warning('Could not capture GPS location. Order will be created without location tracking.', { duration: 6000 });
         }
       } catch (error) {
         console.log('ℹ️ Location capture failed - order will be created without location tracking:', error);
-        toast.warning('Location capture failed. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+        if (error.message.includes('HTTPS')) {
+          toast.error('GPS location requires HTTPS. Please enable HTTPS on your server for GPS location tracking.', { duration: 8000 });
+        } else {
+          toast.warning('GPS location capture failed. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+        }
       }
 
 
