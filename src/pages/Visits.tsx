@@ -138,6 +138,51 @@ const Visits: React.FC = () => {
     setPhotoPreviews(newPreviews);
   };
 
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Resize if too large (max 800px on longest side)
+          const maxDimension = 800;
+          if (width > height && width > maxDimension) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          } else if (height > maxDimension) {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          }, 'image/jpeg', 0.7); // 70% quality
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const handleCreateVisit = async () => {
     try {
       if (!newVisit.customer_id) {
@@ -171,15 +216,21 @@ const Visits: React.FC = () => {
         return;
       }
 
-      // Convert photos to base64
+      // Convert photos to base64 with compression
       const photoBase64s: string[] = [];
       for (const file of selectedPhotos) {
-        const base64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-        photoBase64s.push(base64);
+        try {
+          const compressedFile = await compressImage(file);
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(compressedFile);
+          });
+          photoBase64s.push(base64);
+        } catch (error) {
+          console.error('Error processing photo:', error);
+          // Skip this photo if it fails
+        }
       }
 
       const visitData: Visit = {
