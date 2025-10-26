@@ -145,29 +145,23 @@ const Visits: React.FC = () => {
         return;
       }
 
-      // Automatically capture location for the visit
+      // Automatically capture location for the visit (silently - don't block visit creation)
       let locationData = undefined;
-      try {
-        toast.info('Getting your location... Please wait', { duration: 3000 });
-        console.log('🌍 Attempting to get location for visit tracking...');
-        
-        const location = await getLocationWithFallback();
-        if (location) {
-          locationData = {
-            latitude: location.latitude,
-            longitude: location.longitude,
-            address: location.address,
-            timestamp: new Date().toISOString()
-          };
-          toast.success(`Location captured: ${location.address}`, { duration: 4000 });
-          console.log('✅ Location data captured:', locationData);
-        } else {
-          console.log('ℹ️ No location data available - visit will be created without location tracking');
-          toast.warning('Could not capture location. Visit will be created without location tracking.', { duration: 5000 });
-        }
-      } catch (error) {
-        console.log('ℹ️ Location capture failed - visit will be created without location tracking:', error);
-        toast.warning('Could not capture location. Visit will be created without location tracking.', { duration: 5000 });
+      console.log('🌍 Attempting to get GPS location for visit tracking...');
+      
+      const location = await getLocationWithFallback();
+      if (location) {
+        locationData = {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          address: location.address,
+          timestamp: new Date().toISOString()
+        };
+        toast.success(`GPS location captured: ${location.address}`, { duration: 3000 });
+        console.log('✅ Location data captured:', locationData);
+      } else {
+        console.log('ℹ️ No GPS location - visit will be created without location tracking');
+        // Don't show warning - just silently proceed without location
       }
 
 
