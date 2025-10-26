@@ -117,15 +117,24 @@ const Orders: React.FC = () => {
       if (navigator.permissions) {
         try {
           const result = await navigator.permissions.query({ name: 'geolocation' });
+          console.log('Location permission state:', result.state);
+          
+          // Only show warning if explicitly denied
           if (result.state === 'denied') {
             toast.warning('Location access is denied. Please enable location permissions to create orders.', { 
               duration: 10000,
               description: 'Click the location icon in your browser\'s address bar and allow location access.'
             });
+          } else if (result.state === 'prompt') {
+            console.log('Location permission not yet requested - will prompt when needed');
+          } else if (result.state === 'granted') {
+            console.log('Location permission already granted');
           }
         } catch (error) {
-          console.log('Permission API not supported');
+          console.log('Permission API not supported or error checking permissions:', error);
         }
+      } else {
+        console.log('Permission API not available - will prompt when needed');
       }
     };
     
@@ -487,6 +496,8 @@ const Orders: React.FC = () => {
   const captureLocation = async () => {
     try {
       setIsCapturingLocation(true);
+      toast.info('Getting your location... Please wait', { duration: 3000 });
+      
       console.log('🌍 Attempting to get location for order tracking...');
       const location = await getLocationWithFallback();
       
