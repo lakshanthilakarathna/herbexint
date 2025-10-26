@@ -25,7 +25,28 @@ jobs:
     - name: Build application
       run: npm run build
 
-    - name: Deploy to EC2
+    # Deploy Backend
+    - name: Deploy Backend
+      uses: easingthemes/ssh-deploy@main
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        REMOTE_HOST: ${{ secrets.EC2_HOST }}
+        REMOTE_USER: ubuntu
+        SOURCE: "backend/*"
+        TARGET: "/var/www/herbexint-api"
+        ARGS: "-avz --delete"
+
+    - name: Restart Backend
+      uses: easingthemes/ssh-deploy@main
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        REMOTE_HOST: ${{ secrets.EC2_HOST }}
+        REMOTE_USER: ubuntu
+        PRE_COMMANDS: "cd /var/www/herbexint-api && npm install"
+        SCRIPT: "cd /var/www/herbexint-api && pm2 restart herb-backend || pm2 start server.js --name herb-backend && pm2 save"
+
+    # Deploy Frontend
+    - name: Deploy Frontend
       uses: easingthemes/ssh-deploy@main
       env:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
