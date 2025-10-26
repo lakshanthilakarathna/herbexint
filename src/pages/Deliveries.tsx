@@ -35,7 +35,6 @@ const Deliveries: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
-      console.log('👤 User loaded, fetching orders for:', user.name, 'ID:', user.id);
       fetchOrders();
     }
   }, [user?.id]);
@@ -45,24 +44,12 @@ const Deliveries: React.FC = () => {
       setLoading(true);
       const data = await apiClient.getOrders();
       
-      console.log('🔍 Fetching orders for delivery person...');
-      console.log('Current user:', user?.name, 'User ID:', user?.id);
-      console.log('All orders:', data.map((o: any) => ({ 
-        id: o.id, 
-        order_number: o.order_number, 
-        assigned_to: o.assigned_to, 
-        status: o.status 
-      })));
-      
       // Filter orders assigned to current delivery person
       const myOrders = data.filter((order: Order) => {
         const isAssigned = order.assigned_to === user?.id;
         const isShippedOrDelivered = order.status === 'shipped' || order.status === 'delivered';
-        console.log(`Order ${order.order_number}: assigned_to="${order.assigned_to}" === user.id="${user?.id}" = ${isAssigned}, status=${order.status} (${isShippedOrDelivered})`);
         return isAssigned && isShippedOrDelivered;
       });
-      
-      console.log('📦 My assigned orders:', myOrders);
       setOrders(myOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
