@@ -228,7 +228,12 @@ const Customers: React.FC = () => {
       other: { color: 'bg-gray-100 text-gray-800', label: 'Other' }
     };
     
-    const config = typeConfig[type];
+    // Safety check for undefined/null type
+    if (!type || typeof type !== 'string') {
+      type = 'other'; // Default to 'other'
+    }
+    
+    const config = typeConfig[type] || typeConfig.other;
     
     return (
       <Badge className={config.color}>
@@ -244,7 +249,12 @@ const Customers: React.FC = () => {
       suspended: { color: 'bg-red-100 text-red-800', label: 'Suspended' }
     };
     
-    const config = statusConfig[status];
+    // Safety check for undefined/null status
+    if (!status || typeof status !== 'string') {
+      status = 'active'; // Default to 'active'
+    }
+    
+    const config = statusConfig[status] || statusConfig.active;
     
     return (
       <Badge className={config.color}>

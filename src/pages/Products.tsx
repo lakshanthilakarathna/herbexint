@@ -806,7 +806,12 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
       discontinued: { color: 'bg-red-100 text-red-800', label: 'Discontinued' }
     };
     
-    const config = statusConfig[status];
+    // Safety check for undefined/null status
+    if (!status || typeof status !== 'string') {
+      status = 'active'; // Default to 'active'
+    }
+    
+    const config = statusConfig[status] || statusConfig.active;
     
     return (
       <Badge className={config.color}>
