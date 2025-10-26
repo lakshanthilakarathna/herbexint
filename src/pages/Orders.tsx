@@ -1736,16 +1736,16 @@ const Orders: React.FC = () => {
                 <div>
                   <Label htmlFor="edit-assigned-to">Assign to Delivery Person</Label>
                   <Select 
-                    value={selectedOrder.assigned_to || ''} 
+                    value={selectedOrder.assigned_to || 'unassigned'} 
                     onValueChange={(value) => {
-                      setSelectedOrder({...selectedOrder, assigned_to: value});
+                      setSelectedOrder({...selectedOrder, assigned_to: value === 'unassigned' ? undefined : value});
                     }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select delivery person" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
                       {users
                         .filter((u: any) => u.role_name === 'Delivery Personnel' || u.role_id === 'delivery-role-id')
                         .map((deliveryPerson: any) => (
