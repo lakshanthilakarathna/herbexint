@@ -50,7 +50,7 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         REMOTE_HOST: ${{ secrets.EC2_HOST }}
         REMOTE_USER: ubuntu
-        SCRIPT: "cd /var/www/herbexint-api && pm2 restart herb-backend || pm2 start server.js --name herb-backend && pm2 save"
+        SCRIPT: "cd /var/www/herbexint-api && pm2 restart herb-backend || (pm2 start server.js --name herb-backend && pm2 save) && sleep 3 && curl -s http://localhost:3001/api/visits || echo 'Backend restart may have failed'"
 
     # Deploy Frontend
     - name: Deploy Frontend
