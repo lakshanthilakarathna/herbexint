@@ -125,7 +125,8 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
                    window.location.hostname === '127.0.0.1';
   
   if (!isSecure) {
-    throw new Error('GPS location requires HTTPS. Your site is now HTTPS enabled, please refresh and try again.');
+    console.log('⚠️ Not HTTPS - GPS requires secure connection');
+    return null;
   }
   
   // Try GPS with high accuracy first
@@ -138,11 +139,18 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
     });
     console.log('✅ GPS location captured:', location);
     return location;
-  } catch (error) {
-    console.warn('❌ High accuracy GPS failed, trying lower accuracy...');
+  } catch (error: any) {
+    console.warn('❌ High accuracy GPS failed:', error.message);
+    
+    // Don't retry if permission was denied - user needs to allow access first
+    if (error.message && error.message.includes('denied')) {
+      console.log('⚠️ Location permission denied - user needs to allow access');
+      return null;
+    }
     
     // Try with lower accuracy as fallback
     try {
+      console.log('📍 Trying lower accuracy GPS...');
       const location = await getCurrentLocation({
         enableHighAccuracy: false,
         timeout: 15000,
@@ -152,7 +160,7 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
       return location;
     } catch (secondError) {
       console.error('❌ GPS location failed completely:', secondError);
-      throw new Error('Failed to get GPS location. Please ensure location services are enabled and try again.');
+      return null; // Return null instead of throwing error
     }
   }
 };
