@@ -11,8 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
-import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, MapPin, Package, TrendingUp, Star } from 'lucide-react';
-import { getLocationWithFallback, LocationData, showMobileLocationInstructions, checkLocationCompatibility } from '@/lib/locationUtils';
+import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -27,12 +26,6 @@ interface Order {
   notes?: string;
   created_by: string;
   approved_by?: string;
-  location?: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-    timestamp: string;
-  };
   created_at: string;
   updated_at: string;
 }
@@ -97,48 +90,12 @@ const Orders: React.FC = () => {
   const [productCategoryFilter, setProductCategoryFilter] = useState<string>('all');
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [showProductSuggestions, setShowProductSuggestions] = useState<boolean>(false);
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
-  const [isCapturingLocation, setIsCapturingLocation] = useState(false);
 
   useEffect(() => {
     fetchOrders();
     fetchCustomers();
     fetchProducts();
     fetchUsers();
-    fixLegacyOrders(); // Fix old orders with timestamp IDs
-    
-    // Check location permission on page load
-    const checkLocationPermission = async () => {
-      if (!navigator.geolocation) {
-        toast.error('Your browser does not support location services. Please use a modern browser.', { duration: 10000 });
-        return;
-      }
-      
-      if (navigator.permissions) {
-        try {
-          const result = await navigator.permissions.query({ name: 'geolocation' });
-          console.log('Location permission state:', result.state);
-          
-          // Only show warning if explicitly denied
-          if (result.state === 'denied') {
-            toast.warning('Location access is denied. Please enable location permissions to create orders.', { 
-              duration: 10000,
-              description: 'Click the location icon in your browser\'s address bar and allow location access.'
-            });
-          } else if (result.state === 'prompt') {
-            console.log('Location permission not yet requested - will prompt when needed');
-          } else if (result.state === 'granted') {
-            console.log('Location permission already granted');
-          }
-        } catch (error) {
-          console.log('Permission API not supported or error checking permissions:', error);
-        }
-      } else {
-        console.log('Permission API not available - will prompt when needed');
-      }
-    };
-    
-    checkLocationPermission();
   }, []);
 
   // Close suggestions when clicking outside
@@ -491,34 +448,6 @@ const Orders: React.FC = () => {
     return newOrder.items?.reduce((sum, item) => sum + item.total_price, 0) || 0;
   };
 
-  // Location capture is now handled by the utility function
-
-  const captureLocation = async () => {
-    try {
-      setIsCapturingLocation(true);
-      toast.info('Getting your location... Please wait', { duration: 3000 });
-      
-      console.log('🌍 Attempting to get location for order tracking...');
-      const location = await getLocationWithFallback();
-      
-      if (location) {
-        setCurrentLocation(location);
-        toast.success(`Location captured: ${location.address}`, { duration: 4000 });
-        console.log('✅ Location data captured:', location);
-      } else {
-        throw new Error('Location is required to create orders');
-      }
-    } catch (error) {
-      console.error('❌ Location capture failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Location is required to create orders';
-      toast.error('Location is required to create orders. Please enable location access and try again.', { 
-        duration: 10000,
-        description: errorMessage
-      });
-    } finally {
-      setIsCapturingLocation(false);
-    }
-  };
 
   const handleCreateOrder = async () => {
     try {
@@ -534,19 +463,6 @@ const Orders: React.FC = () => {
         return;
       }
 
-      // Check if location is already captured
-      if (!currentLocation) {
-        toast.error('Location is required to create orders. Please capture your location first.');
-        return;
-      }
-
-      // Use the pre-captured location
-      const locationData = {
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        address: currentLocation.address,
-        timestamp: new Date().toISOString()
-      };
 
       // Mock order creation
       const orderNumber = `ORD-${String(orders.length + 1).padStart(3, '0')}`;
@@ -561,11 +477,6 @@ const Orders: React.FC = () => {
         status: 'draft',
         order_date: new Date().toISOString().split('T')[0],
         items: [...newOrder.items],
-        notes: newOrder.notes || '',
-        created_by: user?.id || 'system',
-        location: locationData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
       };
       
       console.log('Created order data:', newOrderData);
@@ -916,49 +827,6 @@ const Orders: React.FC = () => {
                     </Select>
                   </div>
 
-                  {/* Location Status */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Location Status</Label>
-                    <div className="flex items-center gap-2 p-3 border rounded-lg">
-                      {currentLocation ? (
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 text-green-600">
-                            <MapPin className="h-4 w-4" />
-                            <span className="text-sm font-medium">Location Captured</span>
-                          </div>
-                          <p className="text-xs text-gray-600 mt-1">{currentLocation.address}</p>
-                        </div>
-                      ) : (
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 text-red-600">
-                            <MapPin className="h-4 w-4" />
-                            <span className="text-sm font-medium">Location Required</span>
-                          </div>
-                          <p className="text-xs text-gray-600 mt-1">Location must be captured to create orders</p>
-                        </div>
-                      )}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={captureLocation}
-                        disabled={isCapturingLocation}
-                        className="shrink-0"
-                      >
-                        {isCapturingLocation ? (
-                          <>
-                            <Clock className="h-4 w-4 mr-2 animate-spin" />
-                            Capturing...
-                          </>
-                        ) : (
-                          <>
-                            <MapPin className="h-4 w-4 mr-2" />
-                            {currentLocation ? 'Refresh' : 'Capture'}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="border-t pt-4">

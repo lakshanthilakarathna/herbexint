@@ -12,9 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
-import { Plus, Search, Filter, Eye, Edit, Trash2, MapPin, Clock, Camera, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, Clock, Camera, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getLocationWithFallback, LocationData, showMobileLocationInstructions, checkLocationCompatibility } from '@/lib/locationUtils';
 
 interface Visit {
   id: string;
@@ -24,11 +23,6 @@ interface Visit {
   sales_rep_name: string;
   check_in_time: string;
   check_out_time?: string;
-  location: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-  };
   purpose: 'sales_call' | 'delivery' | 'follow_up' | 'other';
   outcome: 'successful' | 'needs_follow_up' | 'no_contact' | 'other';
   notes: string;
@@ -69,8 +63,6 @@ const Visits: React.FC = () => {
   const [editVisit, setEditVisit] = useState<Partial<Visit>>({});
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
-  const [locationData, setLocationData] = useState<{latitude: number, longitude: number, address?: string} | null>(null);
-  const [isCapturingLocation, setIsCapturingLocation] = useState(false);
 
   useEffect(() => {
     fetchVisits();
@@ -107,33 +99,6 @@ const Visits: React.FC = () => {
     }
   };
 
-  // Location capture is now handled by the utility function
-
-  const captureLocation = async () => {
-    try {
-      setIsCapturingLocation(true);
-      
-      console.log('🌍 Attempting to get location for visit tracking...');
-      const location = await getLocationWithFallback();
-      
-      if (location) {
-        setLocationData(location);
-        toast.success(`Location captured: ${location.address}`, { duration: 3000 });
-        console.log('✅ Location data captured:', location);
-      } else {
-        throw new Error('Location is required to create visits');
-      }
-    } catch (error) {
-      console.error('❌ Location capture failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Location is required to create visits';
-      toast.error('Location is required to create visits. Please enable location access and try again.', { 
-        duration: 10000,
-        description: errorMessage
-      });
-    } finally {
-      setIsCapturingLocation(false);
-    }
-  };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -173,10 +138,6 @@ const Visits: React.FC = () => {
         return;
       }
 
-      if (!locationData) {
-        toast.error('Please capture your location first');
-        return;
-      }
 
       const customer = customers.find(c => c.id === newVisit.customer_id);
       if (!customer) {
@@ -202,7 +163,6 @@ const Visits: React.FC = () => {
         sales_rep_id: user?.id || 'system',
         sales_rep_name: user?.name || 'Unknown',
         check_in_time: new Date().toISOString(),
-        location: locationData,
         purpose: newVisit.purpose || 'sales_call',
         outcome: newVisit.outcome || 'successful',
         notes: newVisit.notes || '',
@@ -392,30 +352,6 @@ const Visits: React.FC = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                {/* Location Capture */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-blue-900 font-medium">Location</Label>
-                      <p className="text-sm text-blue-700">
-                        {locationData ? locationData.address : 'Location not captured'}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={captureLocation}
-                      disabled={isCapturingLocation}
-                    >
-                      {isCapturingLocation ? (
-                        <Clock className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <MapPin className="w-4 h-4 mr-2" />
-                      )}
-                      {isCapturingLocation ? 'Capturing...' : 'Capture Location'}
-                    </Button>
-                  </div>
-                </div>
 
                 {/* Customer Selection */}
                 <div>
@@ -529,7 +465,7 @@ const Visits: React.FC = () => {
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateVisit} disabled={!locationData}>
+                  <Button onClick={handleCreateVisit}>
                     Check In
                   </Button>
                 </div>
