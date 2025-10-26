@@ -334,7 +334,9 @@ const Orders: React.FC = () => {
   // Helper function to get filtered products for suggestions
   const getFilteredProducts = () => {
     return products.filter(product => {
-      const matchesSearch = product.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+      // Safety check for undefined/null name
+      const productName = product.name || `${product.brand_name || ''} ${product.product_name || ''}`.trim() || 'Unknown Product';
+      const matchesSearch = productName.toLowerCase().includes(productSearch.toLowerCase()) ||
                            product.brand_name?.toLowerCase().includes(productSearch.toLowerCase()) ||
                            product.product_name?.toLowerCase().includes(productSearch.toLowerCase()) ||
                            product.manufacturer?.toLowerCase().includes(productSearch.toLowerCase());
