@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           updated_at: new Date().toISOString()
         };
       } else {
-        // Check localStorage for dynamically created users - support both email and username
+        // Check database for dynamically created users - support both email and username
         try {
           const allUsers = await apiClient.getUsers();
           const dbUser = allUsers.find((u: any) => 
@@ -152,12 +152,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             throw new Error('Invalid username/email or password');
           }
           
-          // Verify password (stored in localStorage)
+          // Verify password (stored in database)
           if (dbUser.password !== password) {
             throw new Error('Invalid username/email or password');
           }
           
-          // Use the user data from localStorage
+          // Use the user data from database
           userData = {
             id: dbUser.id,
             name: dbUser.name,
@@ -171,6 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             updated_at: dbUser.updated_at
           };
         } catch (dbError) {
+          console.error('Database login error:', dbError);
           throw new Error('Invalid username/email or password');
         }
       }

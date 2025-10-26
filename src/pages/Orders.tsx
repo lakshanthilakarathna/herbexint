@@ -334,6 +334,9 @@ const Orders: React.FC = () => {
   // Helper function to get filtered products for suggestions
   const getFilteredProducts = () => {
     return products.filter(product => {
+      // Safety check for undefined/null product
+      if (!product) return false;
+      
       // Safety check for undefined/null name
       const productName = product.name || `${product.brand_name || ''} ${product.product_name || ''}`.trim() || 'Unknown Product';
       const matchesSearch = productName.toLowerCase().includes(productSearch.toLowerCase()) ||
@@ -343,7 +346,7 @@ const Orders: React.FC = () => {
       // Safety check for undefined/null category
       const productCategory = product.category || 'liquor'; // Default to 'liquor'
       const matchesCategory = productCategoryFilter === 'all' || productCategory === productCategoryFilter;
-      return matchesSearch && matchesCategory && product.stock_quantity > 0;
+      return matchesSearch && matchesCategory && (product.stock_quantity || 0) > 0;
     }).slice(0, 10); // Limit to 10 suggestions
   };
 
@@ -999,28 +1002,31 @@ const Orders: React.FC = () => {
                         {/* Product Suggestions Dropdown */}
                         {showProductSuggestions && getFilteredProducts().length > 0 && (
                           <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                            {getFilteredProducts().map(product => (
-                              <div
-                                key={product.id}
-                                className="px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                onClick={() => {
-                                  setSelectedProduct(product.id);
-                                  setProductSearch(product.name);
-                                  setShowProductSuggestions(false);
-                                }}
-                              >
-                                <div className="flex items-start justify-between w-full gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-sm leading-tight">
-                                      {product.brand_name} {product.product_name}
+                            {getFilteredProducts().map(product => {
+                              if (!product) return null;
+                              return (
+                                <div
+                                  key={product.id}
+                                  className="px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                  onClick={() => {
+                                    setSelectedProduct(product.id);
+                                    setProductSearch(product.name || '');
+                                    setShowProductSuggestions(false);
+                                  }}
+                                >
+                                  <div className="flex items-start justify-between w-full gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-medium text-sm leading-tight">
+                                        {product.brand_name || ''} {product.product_name || ''}
+                                      </div>
+                                    </div>
+                                    <div className="text-sm font-semibold text-blue-600 flex-shrink-0 whitespace-nowrap">
+                                      Rs. {(product.wholesale_price || product.price || 0).toFixed(2)}
                                     </div>
                                   </div>
-                                  <div className="text-sm font-semibold text-blue-600 flex-shrink-0 whitespace-nowrap">
-                                    Rs. {(product.wholesale_price || product.price || 0).toFixed(2)}
-                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
