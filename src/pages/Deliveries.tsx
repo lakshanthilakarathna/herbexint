@@ -162,6 +162,9 @@ const Deliveries: React.FC = () => {
             <div className="text-center py-12">
               <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">No orders assigned yet</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Ask your admin to assign orders to you from the Orders page
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">

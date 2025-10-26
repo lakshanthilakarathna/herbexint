@@ -35,6 +35,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       'admin-role-id': 'System Administrator',
       'sales-manager-role-id': 'Sales Manager',
       'sales-rep-role-id': 'Sales Representative',
+      'delivery-role-id': 'Delivery Personnel',
       'pharmacist-role-id': 'Distributor/Retailer',
       'finance-role-id': 'Finance Manager',
       'auditor-role-id': 'Auditor'
@@ -46,6 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     if (roleId === 'admin-role-id') return 'destructive';
     if (roleId === 'sales-manager-role-id') return 'default';
     if (roleId === 'sales-rep-role-id') return 'secondary';
+    if (roleId === 'delivery-role-id') return 'outline';
     return 'outline';
   };
 
