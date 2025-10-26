@@ -44,13 +44,13 @@ jobs:
         REMOTE_USER: ubuntu
         SCRIPT: "cd /var/www/herbexint-api && npm install"
 
-    - name: Restart Backend
+    - name: Fix Backend Server
       uses: easingthemes/ssh-deploy@main
       env:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         REMOTE_HOST: ${{ secrets.EC2_HOST }}
         REMOTE_USER: ubuntu
-        SCRIPT: "cd /var/www/herbexint-api && pm2 restart herb-backend || (pm2 start server.js --name herb-backend && pm2 save) && sleep 3 && curl -s http://localhost:3001/api/visits || echo 'Backend restart may have failed'"
+        SCRIPT: "sudo pkill -f 'node server.js' || true && sleep 2 && cd /var/www/herbexint-api && npm install && nohup node server.js > /var/log/herbexint-backend.log 2>&1 & && sleep 5 && curl -s http://localhost:3001/api/visits || echo 'Backend fix may have failed'"
 
     # Deploy Frontend
     - name: Deploy Frontend
