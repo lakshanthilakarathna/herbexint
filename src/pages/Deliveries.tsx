@@ -34,8 +34,11 @@ const Deliveries: React.FC = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (user?.id) {
+      console.log('👤 User loaded, fetching orders for:', user.name, 'ID:', user.id);
+      fetchOrders();
+    }
+  }, [user?.id]);
 
   const fetchOrders = async () => {
     try {
