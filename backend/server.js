@@ -18,7 +18,9 @@ app.use(cors({
 // Handle OPTIONS requests
 app.options('*', cors());
 
+// Increase body size limit for photos in visits
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Data file path
 const dataFile = path.join(__dirname, 'data.json');
