@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, MapPin, Package, TrendingUp, Star } from 'lucide-react';
+import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
 
 interface Order {
   id: string;
@@ -455,107 +456,7 @@ const Orders: React.FC = () => {
     return newOrder.items?.reduce((sum, item) => sum + item.total_price, 0) || 0;
   };
 
-  const getCurrentLocation = (): Promise<{latitude: number, longitude: number, address?: string}> => {
-    return new Promise(async (resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation not supported by this browser'));
-        return;
-      }
-
-      console.log('Attempting to get current location for order...');
-      
-      // Try to get location directly first, then check permissions if it fails
-      const tryGetLocation = () => {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            console.log('Location obtained successfully for order:', position.coords);
-            const { latitude, longitude } = position.coords;
-            
-            // Try to get address from coordinates (reverse geocoding)
-            try {
-              const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-                {
-                  headers: {
-                    'User-Agent': 'HERB-Liquor-Wholesale/1.0'
-                  }
-                }
-              );
-              
-              if (!response.ok) {
-                throw new Error('Reverse geocoding failed');
-              }
-              
-              const data = await response.json();
-              const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-              console.log('Address resolved for order:', address);
-              
-              resolve({ latitude, longitude, address });
-            } catch (error) {
-              console.warn('Reverse geocoding failed:', error);
-              // If reverse geocoding fails, just return coordinates
-              resolve({ latitude, longitude, address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` });
-            }
-          },
-          (error) => {
-            console.log('Geolocation failed for order, checking permissions...');
-            
-            // If geolocation fails, check permissions
-            if (navigator.permissions) {
-              navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-                console.log('Permission state for order:', result.state);
-                if (result.state === 'denied') {
-                  reject(new Error('Location access denied. Please enable location permissions in your browser settings and refresh the page.'));
-                } else {
-                  // Permission is granted but location still failed
-                  let errorMessage = 'Unable to get your location';
-                  
-                  console.log('Geolocation error details for order:', {
-                    code: error.code,
-                    message: error.message,
-                    PERMISSION_DENIED: error.PERMISSION_DENIED,
-                    POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
-                    TIMEOUT: error.TIMEOUT
-                  });
-                  
-                  switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                      errorMessage = 'Location access denied. Please allow location access in your browser settings and refresh the page.';
-                      break;
-                    case error.POSITION_UNAVAILABLE:
-                      errorMessage = 'Location information is unavailable. Please check your GPS/network connection.';
-                      break;
-                    case error.TIMEOUT:
-                      errorMessage = 'Location request timed out. Please try again.';
-                      break;
-                    default:
-                      errorMessage = 'An unknown error occurred while getting your location.';
-                      break;
-                  }
-                  
-                  reject(new Error(errorMessage));
-                }
-              }).catch(() => {
-                // Permission API not supported, use original error
-                reject(new Error('Unable to get your location. Please check your browser settings.'));
-              });
-            } else {
-              // No permission API, use original error
-              reject(new Error('Unable to get your location. Please check your browser settings.'));
-            }
-          },
-          { 
-            enableHighAccuracy: true, 
-            timeout: 15000, // Increased timeout
-            maximumAge: 300000 // 5 minutes
-          }
-        );
-      };
-
-      // Try to get location
-      tryGetLocation();
-    });
-  };
+  // Location capture is now handled by the utility function
 
   const handleCreateOrder = async () => {
     try {
@@ -575,15 +476,17 @@ const Orders: React.FC = () => {
       let locationData = undefined;
       try {
         toast.info('Getting your location for order tracking...', { duration: 3000 });
-        const location = await getCurrentLocation();
-        locationData = {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          address: location.address,
-          timestamp: new Date().toISOString()
-        };
-        toast.success(`Location captured: ${location.address}`, { duration: 4000 });
-        console.log('Location data saved:', locationData);
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+          console.log('Location data saved:', locationData);
+        }
       } catch (error) {
         console.warn('Could not get location:', error);
         const errorMessage = error instanceof Error ? error.message : 'Location not available';

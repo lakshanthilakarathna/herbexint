@@ -14,6 +14,7 @@ import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, MapPin, Clock, Camera, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
 
 interface Visit {
   id: string;
@@ -106,112 +107,17 @@ const Visits: React.FC = () => {
     }
   };
 
-  const getCurrentLocation = (): Promise<{latitude: number, longitude: number, address?: string}> => {
-    return new Promise(async (resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation not supported by this browser'));
-        return;
-      }
-
-      console.log('Attempting to get current location...');
-      
-      // Try to get location directly first, then check permissions if it fails
-      const tryGetLocation = () => {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            console.log('Location obtained successfully:', position.coords);
-            const { latitude, longitude } = position.coords;
-            
-            try {
-              const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-                {
-                  headers: {
-                    'User-Agent': 'HERB-Liquor-Wholesale/1.0'
-                  }
-                }
-              );
-              
-              if (!response.ok) {
-                throw new Error('Reverse geocoding failed');
-              }
-              
-              const data = await response.json();
-              const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-              
-              resolve({ latitude, longitude, address });
-            } catch (error) {
-              console.warn('Reverse geocoding failed:', error);
-              resolve({ latitude, longitude, address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` });
-            }
-          },
-          (error) => {
-            console.log('Geolocation failed, checking permissions...');
-            
-            // If geolocation fails, check permissions
-            if (navigator.permissions) {
-              navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-                console.log('Permission state:', result.state);
-                if (result.state === 'denied') {
-                  reject(new Error('Location access denied. Please enable location permissions in your browser settings and refresh the page.'));
-                } else {
-                  // Permission is granted but location still failed
-                  let errorMessage = 'Unable to get your location';
-                  
-                  console.log('Geolocation error details:', {
-                    code: error.code,
-                    message: error.message,
-                    PERMISSION_DENIED: error.PERMISSION_DENIED,
-                    POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
-                    TIMEOUT: error.TIMEOUT
-                  });
-                  
-                  switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                      errorMessage = 'Location access denied. Please allow location access in your browser settings and refresh the page.';
-                      break;
-                    case error.POSITION_UNAVAILABLE:
-                      errorMessage = 'Location information is unavailable. Please check your GPS/network connection.';
-                      break;
-                    case error.TIMEOUT:
-                      errorMessage = 'Location request timed out. Please try again.';
-                      break;
-                    default:
-                      errorMessage = 'An unknown error occurred while getting your location.';
-                      break;
-                  }
-                  
-                  reject(new Error(errorMessage));
-                }
-              }).catch(() => {
-                // Permission API not supported, use original error
-                reject(new Error('Unable to get your location. Please check your browser settings.'));
-              });
-            } else {
-              // No permission API, use original error
-              reject(new Error('Unable to get your location. Please check your browser settings.'));
-            }
-          },
-          { 
-            enableHighAccuracy: true, 
-            timeout: 15000,
-            maximumAge: 300000
-          }
-        );
-      };
-
-      // Try to get location
-      tryGetLocation();
-    });
-  };
+  // Location capture is now handled by the utility function
 
   const captureLocation = async () => {
     try {
       setIsCapturingLocation(true);
       toast.info('Getting your location...', { duration: 3000 });
-      const location = await getCurrentLocation();
-      setLocationData(location);
-      toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+      const location = await getLocationWithFallback();
+      if (location) {
+        setLocationData(location);
+        toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+      }
     } catch (error) {
       console.warn('Could not get location:', error);
       const errorMessage = error instanceof Error ? error.message : 'Location not available';
