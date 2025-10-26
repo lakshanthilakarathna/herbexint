@@ -392,6 +392,37 @@ app.delete('/api/system-logs/:id', (req, res) => {
   res.json({ message: 'System log deleted' });
 });
 
+// LOGIN API
+app.post('/api/login', (req, res) => {
+  const { username, email, password } = req.body;
+  const data = readData();
+  
+  if (!data.users) {
+    return res.status(401).json({ message: 'No users found' });
+  }
+  
+  // Try to find user by username or email
+  const user = data.users.find(u => 
+    (u.username && u.username === username) || 
+    (u.email && u.email === email)
+  );
+  
+  if (!user) {
+    return res.status(401).json({ message: 'User not found' });
+  }
+  
+  if (user.password !== password) {
+    return res.status(401).json({ message: 'Invalid password' });
+  }
+  
+  // Return user without password
+  const { password: _, ...userWithoutPassword } = user;
+  res.json({
+    user: userWithoutPassword,
+    token: 'mock-token-' + Date.now()
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'HERB Backend API is running' });
