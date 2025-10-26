@@ -20,7 +20,7 @@ interface Order {
   customer_id: string;
   customer_name: string;
   total_amount: number;
-  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'shipped' | 'delivered';
   order_date: string;
   delivery_date?: string;
   items: OrderItem[];
@@ -88,7 +88,7 @@ const Orders: React.FC = () => {
     customer_id: '',
     items: [],
     notes: '',
-    status: 'draft'
+    status: 'pending'
   });
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
@@ -487,23 +487,39 @@ const Orders: React.FC = () => {
         return;
       }
 
-      // Automatically capture location for the order (silently - don't block order creation)
+      // Automatically capture location for the order
       let locationData = undefined;
-      console.log('🌍 Attempting to get GPS location for order tracking...');
-      
-      const location = await getLocationWithFallback();
-      if (location) {
-        locationData = {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          address: location.address,
-          timestamp: new Date().toISOString()
-        };
-        toast.success(`GPS location captured: ${location.address}`, { duration: 3000 });
-        console.log('✅ Location data captured:', locationData);
-      } else {
-        console.log('ℹ️ No GPS location - order will be created without location tracking');
-        // Don't show warning - just silently proceed without location
+      try {
+        toast.info('Getting your location... Please wait', { duration: 3000 });
+        console.log('🌍 Attempting to get location for order tracking...');
+        
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          
+          // Check if it's a fallback location
+          if (location.address.includes('Fallback') || location.address.includes('HTTP connection') || location.address.includes('IP-based location')) {
+            toast.warning(`Using approximate location: ${location.address}`, { duration: 5000 });
+          } else {
+            toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+          }
+          console.log('✅ Location data captured:', locationData);
+        } else {
+          console.log('ℹ️ No location data available - order will be created without location tracking');
+          toast.warning('Could not capture GPS location. Order will be created without location tracking.', { duration: 6000 });
+        }
+      } catch (error) {
+        console.log('ℹ️ Location capture failed - order will be created without location tracking:', error);
+        if (error.message.includes('HTTPS')) {
+          toast.error('GPS location requires HTTPS. Please enable HTTPS on your server for GPS location tracking.', { duration: 8000 });
+        } else {
+          toast.warning('GPS location capture failed. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+        }
       }
 
 
@@ -517,7 +533,7 @@ const Orders: React.FC = () => {
         customer_id: newOrder.customer_id,
         customer_name: customers.find(c => c.id === newOrder.customer_id)?.name || 'Unknown Customer',
         total_amount: total,
-        status: 'draft',
+        status: 'pending',
         order_date: new Date().toISOString().split('T')[0],
         items: [...newOrder.items],
         notes: newOrder.notes || '',
@@ -562,7 +578,7 @@ const Orders: React.FC = () => {
       // Update local state
       setOrders([created, ...orders]);
       setIsCreateDialogOpen(false);
-      setNewOrder({ customer_id: '', items: [], notes: '', status: 'draft' });
+      setNewOrder({ customer_id: '', items: [], notes: '', status: 'pending' });
       setSelectedProduct('');
       setSelectedQuantity(1);
       setCustomerSearch('');
@@ -585,8 +601,9 @@ const Orders: React.FC = () => {
         updated_at: new Date().toISOString()
       });
       
-      // If order is cancelled or rejected, restore stock
-      if ((newStatus === 'cancelled' || newStatus === 'rejected') && order && order.items) {
+      // Note: Order status can only be updated to valid statuses
+      // Stock restoration is not needed anymore with simplified statuses
+      if (false && order && order.items) {
         toast.info('Restoring product stock...', { duration: 2000 });
         let stockRestoreCount = 0;
         
@@ -778,22 +795,18 @@ const Orders: React.FC = () => {
 
   const getStatusBadge = (status: Order['status']) => {
     const statusConfig = {
-      draft: { color: 'bg-gray-100 text-gray-800', icon: Clock },
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      approved: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      rejected: { color: 'bg-red-100 text-red-800', icon: XCircle },
-      shipped: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
-      delivered: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle }
+      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
+      shipped: { color: 'bg-blue-100 text-blue-800', icon: Package, label: 'Shipped' },
+      delivered: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Delivered' }
     };
     
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
     
     return (
       <Badge className={config.color}>
         <Icon className="w-3 h-3 mr-1" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {config.label}
       </Badge>
     );
   };
@@ -1255,13 +1268,9 @@ const Orders: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
                   <SelectItem value="shipped">Shipped</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
