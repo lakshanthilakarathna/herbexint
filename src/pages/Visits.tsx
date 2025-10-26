@@ -216,22 +216,24 @@ const Visits: React.FC = () => {
         return;
       }
 
-      // Convert photos to base64 with compression
+      // Photos temporarily disabled to prevent 413 error
+      // TODO: Implement proper image storage (S3 or file system)
       const photoBase64s: string[] = [];
-      for (const file of selectedPhotos) {
-        try {
-          const compressedFile = await compressImage(file);
-          const base64 = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(compressedFile);
-          });
-          photoBase64s.push(base64);
-        } catch (error) {
-          console.error('Error processing photo:', error);
-          // Skip this photo if it fails
-        }
-      }
+      
+      // Commented out photo upload for now - even with compression, base64 is too large
+      // for (const file of selectedPhotos) {
+      //   try {
+      //     const compressedFile = await compressImage(file);
+      //     const base64 = await new Promise<string>((resolve) => {
+      //       const reader = new FileReader();
+      //       reader.onload = () => resolve(reader.result as string);
+      //       reader.readAsDataURL(compressedFile);
+      //     });
+      //     photoBase64s.push(base64);
+      //   } catch (error) {
+      //     console.error('Error processing photo:', error);
+      //   }
+      // }
 
       const visitData: Visit = {
         id: 'visit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
