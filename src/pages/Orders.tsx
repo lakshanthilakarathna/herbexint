@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
-import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star, MapPin } from 'lucide-react';
+import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
 
 interface Order {
   id: string;
@@ -26,6 +27,12 @@ interface Order {
   notes?: string;
   created_by: string;
   approved_by?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+    timestamp: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -463,6 +470,31 @@ const Orders: React.FC = () => {
         return;
       }
 
+      // Automatically capture location for the order
+      let locationData = undefined;
+      try {
+        toast.info('Getting your location... Please wait', { duration: 3000 });
+        console.log('🌍 Attempting to get location for order tracking...');
+        
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+          console.log('✅ Location data captured:', locationData);
+        } else {
+          console.log('ℹ️ No location data available - order will be created without location tracking');
+          toast.warning('Could not capture location. Order will be created without location tracking.', { duration: 5000 });
+        }
+      } catch (error) {
+        console.log('ℹ️ Location capture failed - order will be created without location tracking:', error);
+        toast.warning('Could not capture location. Order will be created without location tracking.', { duration: 5000 });
+      }
+
 
       // Mock order creation
       const orderNumber = `ORD-${String(orders.length + 1).padStart(3, '0')}`;
@@ -477,6 +509,11 @@ const Orders: React.FC = () => {
         status: 'draft',
         order_date: new Date().toISOString().split('T')[0],
         items: [...newOrder.items],
+        notes: newOrder.notes || '',
+        created_by: user?.id || 'system',
+        location: locationData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
       console.log('Created order data:', newOrderData);
@@ -1231,6 +1268,9 @@ const Orders: React.FC = () => {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-1">
                       <span className="font-mono">{order.order_number || 'N/A'}</span>
+                      {order.location && (
+                        <MapPin className="w-3 h-3 text-blue-500" title="Location captured" />
+                      )}
                       {order.created_by === 'customer-portal' && (
                         <Badge className="bg-purple-100 text-purple-800 text-xs ml-2">Customer Portal</Badge>
                       )}
@@ -1393,6 +1433,31 @@ const Orders: React.FC = () => {
                 </div>
               </div>
 
+              {selectedOrder.location && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <div className="flex-1">
+                      <Label className="text-blue-900">Order Location</Label>
+                      <p className="text-sm text-blue-800 mt-1">{selectedOrder.location.address}</p>
+                      <p className="text-xs text-blue-600 mt-1">
+                        📍 {selectedOrder.location.latitude.toFixed(6)}, {selectedOrder.location.longitude.toFixed(6)}
+                      </p>
+                      <p className="text-xs text-blue-500 mt-1">
+                        Captured: {new Date(selectedOrder.location.timestamp).toLocaleString()}
+                      </p>
+                      <a
+                        href={`https://www.google.com/maps?q=${selectedOrder.location.latitude},${selectedOrder.location.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+                      >
+                        View on Google Maps →
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {selectedOrder.items && selectedOrder.items.length > 0 && (
                 <div>

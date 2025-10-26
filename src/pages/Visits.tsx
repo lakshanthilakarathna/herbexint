@@ -12,8 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
-import { Plus, Search, Filter, Eye, Edit, Trash2, Clock, Camera, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Trash2, Clock, Camera, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
 
 interface Visit {
   id: string;
@@ -23,6 +24,12 @@ interface Visit {
   sales_rep_name: string;
   check_in_time: string;
   check_out_time?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+    timestamp: string;
+  };
   purpose: 'sales_call' | 'delivery' | 'follow_up' | 'other';
   outcome: 'successful' | 'needs_follow_up' | 'no_contact' | 'other';
   notes: string;
@@ -138,6 +145,31 @@ const Visits: React.FC = () => {
         return;
       }
 
+      // Automatically capture location for the visit
+      let locationData = undefined;
+      try {
+        toast.info('Getting your location... Please wait', { duration: 3000 });
+        console.log('🌍 Attempting to get location for visit tracking...');
+        
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+          console.log('✅ Location data captured:', locationData);
+        } else {
+          console.log('ℹ️ No location data available - visit will be created without location tracking');
+          toast.warning('Could not capture location. Visit will be created without location tracking.', { duration: 5000 });
+        }
+      } catch (error) {
+        console.log('ℹ️ Location capture failed - visit will be created without location tracking:', error);
+        toast.warning('Could not capture location. Visit will be created without location tracking.', { duration: 5000 });
+      }
+
 
       const customer = customers.find(c => c.id === newVisit.customer_id);
       if (!customer) {
@@ -163,6 +195,7 @@ const Visits: React.FC = () => {
         sales_rep_id: user?.id || 'system',
         sales_rep_name: user?.name || 'Unknown',
         check_in_time: new Date().toISOString(),
+        location: locationData,
         purpose: newVisit.purpose || 'sales_call',
         outcome: newVisit.outcome || 'successful',
         notes: newVisit.notes || '',
@@ -628,6 +661,7 @@ const Visits: React.FC = () => {
                   <TableHead>Sales Rep</TableHead>
                   <TableHead>Check In</TableHead>
                   <TableHead>Duration</TableHead>
+                  <TableHead>Location</TableHead>
                   <TableHead>Purpose</TableHead>
                   <TableHead>Outcome</TableHead>
                   <TableHead>Actions</TableHead>
@@ -645,6 +679,18 @@ const Visits: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>{getDuration(visit)}</TableCell>
+                    <TableCell>
+                      {visit.location ? (
+                        <div className="flex items-center text-sm">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          <span className="truncate max-w-[150px]" title={visit.location.address}>
+                            {visit.location.address}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No location</span>
+                      )}
+                    </TableCell>
                     <TableCell>{getPurposeBadge(visit.purpose)}</TableCell>
                     <TableCell>{getOutcomeBadge(visit.outcome)}</TableCell>
                     <TableCell>
@@ -763,6 +809,34 @@ const Visits: React.FC = () => {
 
               <div>
               </div>
+
+              {selectedVisit.location && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-500 mb-3">Location</h4>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-blue-800">{selectedVisit.location.address}</p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          📍 {selectedVisit.location.latitude.toFixed(6)}, {selectedVisit.location.longitude.toFixed(6)}
+                        </p>
+                        <p className="text-xs text-blue-500 mt-1">
+                          Captured: {new Date(selectedVisit.location.timestamp).toLocaleString()}
+                        </p>
+                        <a
+                          href={`https://www.google.com/maps?q=${selectedVisit.location.latitude},${selectedVisit.location.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+                        >
+                          View on Google Maps →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {selectedVisit.notes && (
                 <div>
