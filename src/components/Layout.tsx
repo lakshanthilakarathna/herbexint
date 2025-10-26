@@ -115,14 +115,24 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   ];
 
   const filteredSidebarItems = useMemo(() => {
-    return sidebarItems.filter(item => {
+    console.log('🔍 Filtering sidebar items...');
+    console.log('User permissions:', user?.permissions);
+    console.log('User role:', user?.role_name);
+    
+    const filtered = sidebarItems.filter(item => {
       // Always show items without permission requirement
       if (!item.permission || item.permission === null) {
+        console.log(`✅ ${item.title}: No permission required`);
         return true;
       }
       // Check permission for items that require it
-      return hasPermission(item.permission);
+      const hasAccess = hasPermission(item.permission);
+      console.log(`🔐 ${item.title}: has ${item.permission} = ${hasAccess}`);
+      return hasAccess;
     });
+    
+    console.log('📋 Filtered sidebar items:', filtered.map(i => i.title));
+    return filtered;
   }, [user?.permissions]);
 
   const handleLogout = () => {
