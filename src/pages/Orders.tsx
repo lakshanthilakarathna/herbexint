@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, MapPin, Package, TrendingUp, Star } from 'lucide-react';
-import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
+import { getLocationWithFallback, LocationData, showMobileLocationInstructions, checkLocationCompatibility } from '@/lib/locationUtils';
 
 interface Order {
   id: string;
@@ -475,6 +475,14 @@ const Orders: React.FC = () => {
       // Get current location with better user feedback
       let locationData = undefined;
       try {
+        // Check location compatibility first
+        const compatibility = checkLocationCompatibility();
+        console.log('🔍 Location compatibility check:', compatibility);
+        
+        if (!compatibility.supported) {
+          throw new Error('Geolocation not supported by this browser');
+        }
+        
         toast.info('Getting your location for order tracking...', { duration: 3000 });
         const location = await getLocationWithFallback();
         if (location) {
@@ -490,7 +498,18 @@ const Orders: React.FC = () => {
       } catch (error) {
         console.warn('Could not get location:', error);
         const errorMessage = error instanceof Error ? error.message : 'Location not available';
-        toast.warning(`${errorMessage} - Order will be created without location tracking`, { duration: 5000 });
+        
+        // Show mobile-specific instructions if on mobile
+        const compatibility = checkLocationCompatibility();
+        if (compatibility.isMobile) {
+          console.log('📱 Mobile device detected, showing location instructions');
+          showMobileLocationInstructions();
+        }
+        
+        toast.warning(`${errorMessage} - Order will be created without location tracking`, { 
+          duration: 8000,
+          description: compatibility.isMobile ? 'Check the console for mobile setup instructions' : undefined
+        });
       }
 
       // Mock order creation

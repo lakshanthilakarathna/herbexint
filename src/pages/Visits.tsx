@@ -14,7 +14,7 @@ import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, MapPin, Clock, Camera, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
+import { getLocationWithFallback, LocationData, showMobileLocationInstructions, checkLocationCompatibility } from '@/lib/locationUtils';
 
 interface Visit {
   id: string;
@@ -112,6 +112,15 @@ const Visits: React.FC = () => {
   const captureLocation = async () => {
     try {
       setIsCapturingLocation(true);
+      
+      // Check location compatibility first
+      const compatibility = checkLocationCompatibility();
+      console.log('🔍 Location compatibility check:', compatibility);
+      
+      if (!compatibility.supported) {
+        throw new Error('Geolocation not supported by this browser');
+      }
+      
       toast.info('Getting your location...', { duration: 3000 });
       const location = await getLocationWithFallback();
       if (location) {
@@ -121,7 +130,18 @@ const Visits: React.FC = () => {
     } catch (error) {
       console.warn('Could not get location:', error);
       const errorMessage = error instanceof Error ? error.message : 'Location not available';
-      toast.warning(`${errorMessage} - Visit will be created without location tracking`, { duration: 5000 });
+      
+      // Show mobile-specific instructions if on mobile
+      const compatibility = checkLocationCompatibility();
+      if (compatibility.isMobile) {
+        console.log('📱 Mobile device detected, showing location instructions');
+        showMobileLocationInstructions();
+      }
+      
+      toast.warning(`${errorMessage} - Visit will be created without location tracking`, { 
+        duration: 8000,
+        description: compatibility.isMobile ? 'Check the console for mobile setup instructions' : undefined
+      });
     } finally {
       setIsCapturingLocation(false);
     }
