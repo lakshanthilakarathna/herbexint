@@ -281,6 +281,9 @@ export const testLocationManually = (): Promise<LocationData | null> => {
       },
       (error) => {
         console.log('❌ Manual test failed:', error);
+        console.log('Error code:', error.code);
+        console.log('Error message:', error.message);
+        console.log('Full error object:', JSON.stringify(error, null, 2));
         resolve(null);
       },
       {

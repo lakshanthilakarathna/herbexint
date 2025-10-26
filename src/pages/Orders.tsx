@@ -465,7 +465,7 @@ const Orders: React.FC = () => {
         console.log('✅ Manual location test result:', location);
       } else {
         toast.error('Location test failed - check console for details', { duration: 5000 });
-        console.log('❌ Manual location test failed');
+        console.log('❌ Manual location test failed - no location returned');
       }
     } catch (error) {
       toast.error(`Location test error: ${error}`, { duration: 5000 });
