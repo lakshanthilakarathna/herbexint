@@ -266,26 +266,68 @@ export const getMobileLocation = async (options: LocationOptions = {}): Promise<
 };
 
 /**
- * Get location with fallback handling - ULTRA SIMPLIFIED VERSION
- * This version never throws errors and always returns null if location fails
+ * Get location with fallback handling - MANDATORY VERSION
+ * This version tries multiple strategies and throws errors if location cannot be obtained
  */
-export const getLocationWithFallback = async (options: LocationOptions = {}): Promise<LocationData | null> => {
-  console.log('🌍 Attempting to get location (ultra simplified approach)...');
+export const getLocationWithFallback = async (options: LocationOptions = {}): Promise<LocationData> => {
+  console.log('🌍 Attempting to get location (mandatory approach)...');
   
+  const isMobile = isMobileDevice();
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+  
+  // Strategy 1: High accuracy with short timeout
   try {
-    // Try with very permissive options first
-    const permissiveOptions = {
-      enableHighAccuracy: false, // Less accurate but more likely to work
-      timeout: 5000, // Short timeout
-      maximumAge: 600000 // Accept very old location data (10 minutes)
-    };
-    
-    const location = await getCurrentLocation(permissiveOptions);
-    console.log('✅ Location captured successfully:', location);
+    console.log('📍 Strategy 1: High accuracy (10s timeout)');
+    const location = await getCurrentLocation({
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    });
+    console.log('✅ Location captured with high accuracy:', location);
     return location;
   } catch (error) {
-    console.log('ℹ️ Location not available, continuing without location tracking');
-    return null;
+    console.warn('❌ Strategy 1 failed:', error);
+    lastError = error as Error;
+  }
+  
+  // Strategy 2: Low accuracy with medium timeout
+  try {
+    console.log('📍 Strategy 2: Low accuracy (15s timeout)');
+    const location = await getCurrentLocation({
+      enableHighAccuracy: false,
+      timeout: 15000,
+      maximumAge: 300000 // 5 minutes
+    });
+    console.log('✅ Location captured with low accuracy:', location);
+    return location;
+  } catch (error) {
+    console.warn('❌ Strategy 2 failed:', error);
+    lastError = error as Error;
+  }
+  
+  // Strategy 3: Cached location with long timeout
+  try {
+    console.log('📍 Strategy 3: Cached location (20s timeout)');
+    const location = await getCurrentLocation({
+      enableHighAccuracy: false,
+      timeout: 20000,
+      maximumAge: 600000 // 10 minutes
+    });
+    console.log('✅ Location captured from cache:', location);
+    return location;
+  } catch (error) {
+    console.warn('❌ Strategy 3 failed:', error);
+    lastError = error as Error;
+  }
+  
+  // All strategies failed - throw descriptive error
+  console.error('❌ All location strategies failed');
+  
+  if (isMobile) {
+    throw new Error('Location is required but could not be obtained. Please:\n1. Enable Location Services in your device settings\n2. Allow location access for this website\n3. Try refreshing the page\n4. Make sure you\'re in an area with good GPS signal');
+  } else {
+    throw new Error('Location is required but could not be obtained. Please:\n1. Click the location icon in your browser\'s address bar\n2. Select "Allow" for location access\n3. Refresh the page and try again\n4. Make sure your browser supports geolocation');
   }
 };
 

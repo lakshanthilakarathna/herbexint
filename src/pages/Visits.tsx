@@ -115,15 +115,21 @@ const Visits: React.FC = () => {
       
       console.log('🌍 Attempting to get location for visit tracking...');
       const location = await getLocationWithFallback();
+      
       if (location) {
         setLocationData(location);
         toast.success(`Location captured: ${location.address}`, { duration: 3000 });
         console.log('✅ Location data captured:', location);
       } else {
-        console.log('ℹ️ No location data available - visit will be created without location tracking');
+        throw new Error('Location is required to create visits');
       }
     } catch (error) {
-      console.log('ℹ️ Location not available - visit will be created without location tracking');
+      console.error('❌ Location capture failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Location is required to create visits';
+      toast.error('Location is required to create visits. Please enable location access and try again.', { 
+        duration: 10000,
+        description: errorMessage
+      });
     } finally {
       setIsCapturingLocation(false);
     }

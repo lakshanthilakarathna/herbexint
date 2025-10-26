@@ -97,6 +97,8 @@ const Orders: React.FC = () => {
   const [productCategoryFilter, setProductCategoryFilter] = useState<string>('all');
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [showProductSuggestions, setShowProductSuggestions] = useState<boolean>(false);
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
+  const [isCapturingLocation, setIsCapturingLocation] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -104,6 +106,30 @@ const Orders: React.FC = () => {
     fetchProducts();
     fetchUsers();
     fixLegacyOrders(); // Fix old orders with timestamp IDs
+    
+    // Check location permission on page load
+    const checkLocationPermission = async () => {
+      if (!navigator.geolocation) {
+        toast.error('Your browser does not support location services. Please use a modern browser.', { duration: 10000 });
+        return;
+      }
+      
+      if (navigator.permissions) {
+        try {
+          const result = await navigator.permissions.query({ name: 'geolocation' });
+          if (result.state === 'denied') {
+            toast.warning('Location access is denied. Please enable location permissions to create orders.', { 
+              duration: 10000,
+              description: 'Click the location icon in your browser\'s address bar and allow location access.'
+            });
+          }
+        } catch (error) {
+          console.log('Permission API not supported');
+        }
+      }
+    };
+    
+    checkLocationPermission();
   }, []);
 
   // Close suggestions when clicking outside
@@ -458,6 +484,31 @@ const Orders: React.FC = () => {
 
   // Location capture is now handled by the utility function
 
+  const captureLocation = async () => {
+    try {
+      setIsCapturingLocation(true);
+      console.log('🌍 Attempting to get location for order tracking...');
+      const location = await getLocationWithFallback();
+      
+      if (location) {
+        setCurrentLocation(location);
+        toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+        console.log('✅ Location data captured:', location);
+      } else {
+        throw new Error('Location is required to create orders');
+      }
+    } catch (error) {
+      console.error('❌ Location capture failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Location is required to create orders';
+      toast.error('Location is required to create orders. Please enable location access and try again.', { 
+        duration: 10000,
+        description: errorMessage
+      });
+    } finally {
+      setIsCapturingLocation(false);
+    }
+  };
+
   const handleCreateOrder = async () => {
     try {
       console.log('Creating order with data:', newOrder);
@@ -472,26 +523,19 @@ const Orders: React.FC = () => {
         return;
       }
 
-        // Get current location (simplified - no error messages)
-        let locationData = undefined;
-        try {
-          console.log('🌍 Attempting to get location for order tracking...');
-          const location = await getLocationWithFallback();
-          if (location) {
-            locationData = {
-              latitude: location.latitude,
-              longitude: location.longitude,
-              address: location.address,
-              timestamp: new Date().toISOString()
-            };
-            toast.success(`Location captured: ${location.address}`, { duration: 3000 });
-            console.log('✅ Location data saved:', locationData);
-          } else {
-            console.log('ℹ️ No location data available - order will be created without location tracking');
-          }
-        } catch (error) {
-          console.log('ℹ️ Location not available - order will be created without location tracking');
-        }
+      // Check if location is already captured
+      if (!currentLocation) {
+        toast.error('Location is required to create orders. Please capture your location first.');
+        return;
+      }
+
+      // Use the pre-captured location
+      const locationData = {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        address: currentLocation.address,
+        timestamp: new Date().toISOString()
+      };
 
       // Mock order creation
       const orderNumber = `ORD-${String(orders.length + 1).padStart(3, '0')}`;
@@ -859,6 +903,50 @@ const Orders: React.FC = () => {
                         )}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  {/* Location Status */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Location Status</Label>
+                    <div className="flex items-center gap-2 p-3 border rounded-lg">
+                      {currentLocation ? (
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-green-600">
+                            <MapPin className="h-4 w-4" />
+                            <span className="text-sm font-medium">Location Captured</span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">{currentLocation.address}</p>
+                        </div>
+                      ) : (
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-red-600">
+                            <MapPin className="h-4 w-4" />
+                            <span className="text-sm font-medium">Location Required</span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">Location must be captured to create orders</p>
+                        </div>
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={captureLocation}
+                        disabled={isCapturingLocation}
+                        className="shrink-0"
+                      >
+                        {isCapturingLocation ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Capturing...
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="h-4 w-4 mr-2" />
+                            {currentLocation ? 'Refresh' : 'Capture'}
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
