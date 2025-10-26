@@ -208,21 +208,69 @@ export const testGeolocationAvailability = (): Promise<{available: boolean, erro
     navigator.geolocation.getCurrentPosition(
       () => resolve({ available: true }),
       (error) => {
+        console.log('Geolocation error details:', error);
         let errorMessage = 'Unknown error';
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Permission denied - Please allow location access';
+            errorMessage = 'Permission denied - Please allow location access in browser settings';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Position unavailable - Please check your GPS';
+            errorMessage = 'Position unavailable - Please check your GPS signal';
             break;
           case error.TIMEOUT:
             errorMessage = 'Request timeout - Please try again';
             break;
+          default:
+            errorMessage = `Error code ${error.code}: ${error.message}`;
         }
         resolve({ available: false, error: errorMessage });
       },
       { timeout: 5000, enableHighAccuracy: false, maximumAge: 60000 }
+    );
+  });
+};
+
+/**
+ * Simple test function to manually trigger geolocation
+ */
+export const testLocationManually = (): Promise<LocationData | null> => {
+  return new Promise((resolve) => {
+    console.log('🧪 Manual location test starting...');
+    
+    if (!navigator.geolocation) {
+      console.log('❌ Geolocation not supported');
+      resolve(null);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        console.log('✅ Manual test successful:', position.coords);
+        try {
+          const address = await getAddressFromCoordinates(position.coords.latitude, position.coords.longitude);
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            address: address
+          });
+        } catch (error) {
+          console.log('⚠️ Reverse geocoding failed, using coordinates');
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            address: `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`
+          });
+        }
+      },
+      (error) => {
+        console.log('❌ Manual test failed:', error);
+        resolve(null);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000
+      }
     );
   });
 };

@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star, MapPin } from 'lucide-react';
-import { getLocationWithFallback, LocationData, testGeolocationAvailability } from '@/lib/locationUtils';
+import { getLocationWithFallback, LocationData, testGeolocationAvailability, testLocationManually } from '@/lib/locationUtils';
 
 interface Order {
   id: string;
@@ -455,6 +455,23 @@ const Orders: React.FC = () => {
     return newOrder.items?.reduce((sum, item) => sum + item.total_price, 0) || 0;
   };
 
+
+  const testLocationDebug = async () => {
+    console.log('🧪 Testing location manually...');
+    try {
+      const location = await testLocationManually();
+      if (location) {
+        toast.success(`Location test successful: ${location.address}`, { duration: 5000 });
+        console.log('✅ Manual location test result:', location);
+      } else {
+        toast.error('Location test failed - check console for details', { duration: 5000 });
+        console.log('❌ Manual location test failed');
+      }
+    } catch (error) {
+      toast.error(`Location test error: ${error}`, { duration: 5000 });
+      console.log('❌ Manual location test error:', error);
+    }
+  };
 
   const handleCreateOrder = async () => {
     try {
@@ -1208,6 +1225,16 @@ const Orders: React.FC = () => {
                   </Button>
                   <Button className="w-full sm:w-auto" onClick={handleCreateOrder}>
                     Create Order
+                  </Button>
+                  
+                  {/* Debug button for location testing */}
+                  <Button 
+                    onClick={testLocationDebug} 
+                    variant="outline" 
+                    className="w-full sm:w-auto text-xs"
+                    title="Test location capture manually"
+                  >
+                    🧪 Test Location
                   </Button>
                 </div>
               </div>
