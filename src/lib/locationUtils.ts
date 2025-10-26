@@ -119,6 +119,19 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
   const isMobile = isMobileDevice();
   let lastError: Error | null = null;
   
+  // Check if we're on HTTPS or localhost
+  const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  if (!isSecure) {
+    console.log('⚠️ HTTP detected - geolocation may not work. Providing fallback location.');
+    // Return a fallback location for HTTP connections
+    return {
+      latitude: 6.9271, // Colombo, Sri Lanka coordinates
+      longitude: 79.8612,
+      address: 'Colombo, Sri Lanka (Approximate location - HTTP connection)'
+    };
+  }
+  
   // Strategy 1: High accuracy with short timeout
   try {
     console.log('📍 Strategy 1: High accuracy (8s timeout)');
@@ -179,9 +192,13 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
     lastError = error as Error;
   }
   
-  // All strategies failed
-  console.log('❌ All location strategies failed. Last error:', lastError?.message);
-  return null;
+  // All strategies failed - return fallback location
+  console.log('❌ All location strategies failed. Using fallback location.');
+  return {
+    latitude: 6.9271, // Colombo, Sri Lanka coordinates
+    longitude: 79.8612,
+    address: 'Colombo, Sri Lanka (Fallback location)'
+  };
 };
 
 /**

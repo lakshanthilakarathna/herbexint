@@ -507,7 +507,13 @@ const Orders: React.FC = () => {
               address: location.address,
               timestamp: new Date().toISOString()
             };
-            toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+            
+            // Check if it's a fallback location
+            if (location.address.includes('Fallback') || location.address.includes('HTTP connection')) {
+              toast.warning(`Using approximate location: ${location.address}`, { duration: 5000 });
+            } else {
+              toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+            }
             console.log('✅ Location data captured:', locationData);
           } else {
             console.log('ℹ️ No location data available - order will be created without location tracking');
