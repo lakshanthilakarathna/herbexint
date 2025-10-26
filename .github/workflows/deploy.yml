@@ -36,13 +36,20 @@ jobs:
         TARGET: "/var/www/herbexint-api"
         ARGS: "-avz --delete"
 
+    - name: Install Backend Dependencies
+      uses: easingthemes/ssh-deploy@main
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        REMOTE_HOST: ${{ secrets.EC2_HOST }}
+        REMOTE_USER: ubuntu
+        SCRIPT: "cd /var/www/herbexint-api && npm install"
+
     - name: Restart Backend
       uses: easingthemes/ssh-deploy@main
       env:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         REMOTE_HOST: ${{ secrets.EC2_HOST }}
         REMOTE_USER: ubuntu
-        PRE_COMMANDS: "cd /var/www/herbexint-api && npm install"
         SCRIPT: "cd /var/www/herbexint-api && pm2 restart herb-backend || pm2 start server.js --name herb-backend && pm2 save"
 
     # Deploy Frontend
