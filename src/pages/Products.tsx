@@ -1542,7 +1542,7 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                       <p className="text-sm font-bold text-purple-900">
                         Rs. {((selectedProduct.retail_price || 0) - (selectedProduct.cost_price || 0)).toFixed(2)} 
                         <span className="text-xs ml-1">
-                          ({((selectedProduct.retail_price || 0) - (selectedProduct.cost_price || 0)) / (selectedProduct.cost_price || 1) * 100).toFixed(1)}%)
+                          ({(((selectedProduct.retail_price || 0) - (selectedProduct.cost_price || 0)) / (selectedProduct.cost_price || 1) * 100).toFixed(1)}%)
                         </span>
                       </p>
                     </div>
