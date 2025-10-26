@@ -343,6 +343,11 @@ const Orders: React.FC = () => {
     return 'Unknown';
   };
 
+  const getDeliveryPersonName = (deliveryPersonId: string | undefined) => {
+    if (!deliveryPersonId) return 'Not assigned';
+    return getUserName(deliveryPersonId);
+  };
+
   // Helper function to get filtered products for suggestions
   const getFilteredProducts = () => {
     return products.filter(product => {
@@ -681,13 +686,14 @@ const Orders: React.FC = () => {
       // Get the original order to compare item quantities
       const originalOrder = orders.find(o => o.id === selectedOrder.id);
       
-      // Update order via API (includes items, total, notes, status, delivery_date)
+      // Update order via API (includes items, total, notes, status, delivery_date, assigned_to)
       await apiClient.updateOrder(selectedOrder.id, {
         items: selectedOrder.items,
         total_amount: selectedOrder.total_amount,
         status: selectedOrder.status,
         notes: selectedOrder.notes,
         delivery_date: selectedOrder.delivery_date,
+        assigned_to: selectedOrder.assigned_to,
         updated_at: new Date().toISOString()
       });
 
@@ -1300,6 +1306,7 @@ const Orders: React.FC = () => {
                 <TableHead className="min-w-[100px]">Order Date</TableHead>
                 <TableHead className="min-w-[120px]">Delivery Date</TableHead>
                 <TableHead className="min-w-[120px]">Created By</TableHead>
+                <TableHead className="min-w-[120px]">Assigned To</TableHead>
                 <TableHead className="min-w-[120px]">Last Updated</TableHead>
                 <TableHead className="min-w-[150px]">Actions</TableHead>
               </TableRow>
@@ -1330,6 +1337,9 @@ const Orders: React.FC = () => {
                         <Badge variant="outline" className="text-xs">You</Badge>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">{getDeliveryPersonName(order.assigned_to)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
@@ -1716,6 +1726,33 @@ const Orders: React.FC = () => {
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="shipped">Shipped</SelectItem>
                       <SelectItem value="delivered">Delivered</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Assign to Delivery Personnel - Only Admin can edit */}
+              {user?.role_id === 'admin-role-id' && (
+                <div>
+                  <Label htmlFor="edit-assigned-to">Assign to Delivery Person</Label>
+                  <Select 
+                    value={selectedOrder.assigned_to || ''} 
+                    onValueChange={(value) => {
+                      setSelectedOrder({...selectedOrder, assigned_to: value});
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select delivery person" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Unassigned</SelectItem>
+                      {users
+                        .filter((u: any) => u.role_name === 'Delivery Personnel' || u.role_id === 'delivery-role-id')
+                        .map((deliveryPerson: any) => (
+                          <SelectItem key={deliveryPerson.id} value={deliveryPerson.id}>
+                            {deliveryPerson.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>

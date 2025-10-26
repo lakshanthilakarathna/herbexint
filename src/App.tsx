@@ -19,6 +19,8 @@ import CustomerPortals from './pages/CustomerPortals';
 import ProductCatalog from './pages/ProductCatalog';
 import SharedCatalogs from './pages/SharedCatalogs';
 import Reports from './pages/Reports';
+import DeliveryPersonnel from './pages/DeliveryPersonnel';
+import Deliveries from './pages/Deliveries';
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -132,6 +134,26 @@ const App = () => (
                 <ProtectedRoute requiredPermissions={['customers:read']}>
                   <Layout title="Customer Portals">
                     <CustomerPortals />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/delivery-personnel" 
+              element={
+                <ProtectedRoute requiredPermissions={['users:read']}>
+                  <Layout title="Delivery Personnel">
+                    <DeliveryPersonnel />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/deliveries" 
+              element={
+                <ProtectedRoute requiredPermissions={['deliveries:read']}>
+                  <Layout title="My Deliveries">
+                    <Deliveries />
                   </Layout>
                 </ProtectedRoute>
               } 
