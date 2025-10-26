@@ -174,12 +174,6 @@ export const Dashboard: React.FC = () => {
       permission: 'products:read'
     },
     {
-      title: 'Inventory',
-      icon: TrendingUp,
-      href: '/inventory',
-      permission: 'inventory:read'
-    },
-    {
       title: 'Visits',
       icon: UserCheck,
       href: '/visits',

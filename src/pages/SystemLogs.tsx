@@ -17,7 +17,7 @@ interface SystemLog {
   user_name: string;
   user_email: string;
   action: string;
-  resource_type: 'order' | 'customer' | 'product' | 'user' | 'login' | 'logout' | 'inventory' | 'other';
+  resource_type: 'order' | 'customer' | 'product' | 'user' | 'login' | 'logout' | 'other';
   resource_id?: string;
   details?: string;
   ip_address?: string;

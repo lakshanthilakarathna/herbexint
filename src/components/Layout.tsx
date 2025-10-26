@@ -36,7 +36,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       'sales-manager-role-id': 'Sales Manager',
       'sales-rep-role-id': 'Sales Representative',
       'pharmacist-role-id': 'Distributor/Retailer',
-      'inventory-role-id': 'Inventory Manager',
       'finance-role-id': 'Finance Manager',
       'auditor-role-id': 'Auditor'
     };

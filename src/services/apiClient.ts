@@ -155,18 +155,6 @@ class APIClient {
     }
   }
 
-  // Inventory
-  async getInventory() {
-    const products = await this.getProducts();
-    return products.map((p: any) => ({
-      product_id: p.id,
-      product_name: p.product_name,
-      current_stock: p.stock_quantity || 0,
-      min_stock_level: p.min_stock_level || 10,
-      max_stock_level: p.max_stock_level || 1000,
-      unit: p.unit || 'pieces'
-    }));
-  }
 
   // Visits
   async getVisits() {

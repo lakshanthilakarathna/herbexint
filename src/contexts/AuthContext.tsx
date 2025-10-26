@@ -53,7 +53,6 @@ const MOCK_USERS = [
       'orders:read', 'orders:write', 'orders:delete',
       'customers:read', 'customers:write', 'customers:delete',
       'products:read', 'products:write', 'products:delete',
-      'inventory:read', 'inventory:write', 'inventory:delete',
       'visits:read', 'visits:write', 'visits:delete',
       'reports:read', 'reports:write',
       'users:read', 'users:write', 'users:delete',

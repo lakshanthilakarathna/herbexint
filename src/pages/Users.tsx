@@ -70,7 +70,6 @@ const Users: React.FC = () => {
             'orders:read', 'orders:write', 'orders:delete',
             'customers:read', 'customers:write', 'customers:delete',
             'products:read', 'products:write', 'products:delete',
-            'inventory:read', 'inventory:write', 'inventory:delete',
             'visits:read', 'visits:write', 'visits:delete',
             'reports:read', 'reports:write',
             'users:read', 'users:write', 'users:delete',
@@ -390,7 +389,7 @@ const Users: React.FC = () => {
                     Can create/manage orders, customers, view products, and track visits
                   </p>
                   <p className="text-xs text-blue-500 mt-1">
-                    ❌ Cannot view: Revenue data, Stock alerts, Reports, Inventory
+                    ❌ Cannot view: Revenue data, Stock alerts, Reports
                   </p>
                 </div>
 
