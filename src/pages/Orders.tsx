@@ -490,35 +490,28 @@ const Orders: React.FC = () => {
       // Automatically capture location for the order
       let locationData = undefined;
       try {
-        // First test if geolocation is available
-        const availability = await testGeolocationAvailability();
-        if (!availability.available) {
-          console.log('⚠️ Geolocation not available:', availability.error);
-          toast.warning(`Location not available: ${availability.error}. Order will be created without location tracking.`, { duration: 6000 });
-        } else {
-          toast.info('Getting your location... Please wait', { duration: 3000 });
-          console.log('🌍 Attempting to get location for order tracking...');
+        toast.info('Getting your location... Please wait', { duration: 3000 });
+        console.log('🌍 Attempting to get location for order tracking...');
+        
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
           
-          const location = await getLocationWithFallback();
-          if (location) {
-            locationData = {
-              latitude: location.latitude,
-              longitude: location.longitude,
-              address: location.address,
-              timestamp: new Date().toISOString()
-            };
-            
-            // Check if it's a fallback location
-            if (location.address.includes('Fallback') || location.address.includes('HTTP connection')) {
-              toast.warning(`Using approximate location: ${location.address}`, { duration: 5000 });
-            } else {
-              toast.success(`Location captured: ${location.address}`, { duration: 4000 });
-            }
-            console.log('✅ Location data captured:', locationData);
+          // Check if it's a fallback location
+          if (location.address.includes('Fallback') || location.address.includes('HTTP connection') || location.address.includes('IP-based location')) {
+            toast.warning(`Using approximate location: ${location.address}`, { duration: 5000 });
           } else {
-            console.log('ℹ️ No location data available - order will be created without location tracking');
-            toast.warning('Could not capture location. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+            toast.success(`Location captured: ${location.address}`, { duration: 4000 });
           }
+          console.log('✅ Location data captured:', locationData);
+        } else {
+          console.log('ℹ️ No location data available - order will be created without location tracking');
+          toast.warning('Could not capture location. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
         }
       } catch (error) {
         console.log('ℹ️ Location capture failed - order will be created without location tracking:', error);
