@@ -7,11 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Download, Filter } from 'lucide-react';
 import { apiClient } from '@/services/apiClient';
 import { SalesSummary } from '@/components/reports/SalesSummary';
-import { ProductPerformance } from '@/components/reports/ProductPerformance';
-import { StockStatus } from '@/components/reports/StockStatus';
 import { SalesRepPerformance } from '@/components/reports/SalesRepPerformance';
 import { CustomerAnalytics } from '@/components/reports/CustomerAnalytics';
-import { FinancialAnalysis } from '@/components/reports/FinancialAnalysis';
 
 const Reports: React.FC = () => {
   const { user, hasPermission } = useAuth();
@@ -121,11 +118,8 @@ const Reports: React.FC = () => {
       <Tabs defaultValue="sales" className="space-y-4">
         <TabsList className="flex-wrap">
           <TabsTrigger value="sales">Sales Summary</TabsTrigger>
-          <TabsTrigger value="products">Product Performance</TabsTrigger>
-          <TabsTrigger value="stock">Stock Status</TabsTrigger>
           <TabsTrigger value="reps">Sales Rep Performance</TabsTrigger>
           <TabsTrigger value="customers">Customer Analytics</TabsTrigger>
-          <TabsTrigger value="financial">Financial Analysis</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
@@ -133,18 +127,6 @@ const Reports: React.FC = () => {
             orders={filterOrdersByDateRange(orders)} 
             dateRange={dateRange}
           />
-        </TabsContent>
-
-        <TabsContent value="products" className="space-y-4">
-          <ProductPerformance 
-            orders={filterOrdersByDateRange(orders)} 
-            products={products}
-            dateRange={dateRange}
-          />
-        </TabsContent>
-
-        <TabsContent value="stock" className="space-y-4">
-          <StockStatus products={products} />
         </TabsContent>
 
         <TabsContent value="reps" className="space-y-4">
@@ -158,14 +140,6 @@ const Reports: React.FC = () => {
           <CustomerAnalytics 
             orders={filterOrdersByDateRange(orders)} 
             customers={customers}
-            dateRange={dateRange}
-          />
-        </TabsContent>
-
-        <TabsContent value="financial" className="space-y-4">
-          <FinancialAnalysis 
-            orders={filterOrdersByDateRange(orders)} 
-            products={products}
             dateRange={dateRange}
           />
         </TabsContent>
