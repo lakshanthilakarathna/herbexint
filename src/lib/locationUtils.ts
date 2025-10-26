@@ -37,6 +37,58 @@ export const getDeviceOptions = (options: LocationOptions = {}): LocationOptions
 };
 
 /**
+ * Get location from IP address as fallback
+ */
+export const getLocationFromIP = async (): Promise<LocationData | null> => {
+  try {
+    console.log('🌐 Attempting to get location from IP address...');
+    
+    // Try multiple IP geolocation services
+    const services = [
+      'https://ipapi.co/json/',
+      'https://ip-api.com/json/',
+      'https://api.ipgeolocation.io/ipgeo?apiKey=free'
+    ];
+    
+    for (const service of services) {
+      try {
+        const response = await fetch(service, { timeout: 5000 });
+        if (!response.ok) continue;
+        
+        const data = await response.json();
+        
+        // Different services return different field names
+        const lat = data.latitude || data.lat;
+        const lon = data.longitude || data.lon;
+        const city = data.city || data.city_name;
+        const country = data.country_name || data.country;
+        const region = data.region || data.region_name || data.state;
+        
+        if (lat && lon) {
+          const address = [city, region, country].filter(Boolean).join(', ') || `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+          
+          console.log('✅ IP location obtained:', { lat, lon, address });
+          return {
+            latitude: parseFloat(lat),
+            longitude: parseFloat(lon),
+            address: `${address} (IP-based location)`
+          };
+        }
+      } catch (error) {
+        console.warn(`IP service failed: ${service}`, error);
+        continue;
+      }
+    }
+    
+    console.log('❌ All IP location services failed');
+    return null;
+  } catch (error) {
+    console.warn('IP location detection failed:', error);
+    return null;
+  }
+};
+
+/**
  * Get address from coordinates using reverse geocoding
  */
 export const getAddressFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
@@ -123,8 +175,15 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
   const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
   if (!isSecure) {
-    console.log('⚠️ HTTP detected - geolocation may not work. Providing fallback location.');
-    // Return a fallback location for HTTP connections
+    console.log('⚠️ HTTP detected - geolocation may not work. Trying IP-based location...');
+    // Try IP-based location for HTTP connections
+    const ipLocation = await getLocationFromIP();
+    if (ipLocation) {
+      return ipLocation;
+    }
+    
+    // Fallback to Colombo if IP location fails
+    console.log('⚠️ IP location failed, using fallback location');
     return {
       latitude: 6.9271, // Colombo, Sri Lanka coordinates
       longitude: 79.8612,
@@ -251,14 +310,21 @@ export const testGeolocationAvailability = (): Promise<{available: boolean, erro
  * Simple test function to manually trigger geolocation
  */
 export const testLocationManually = (): Promise<LocationData | null> => {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     console.log('🧪 Manual location test starting...');
     
     // Check if we're on HTTP
     const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
     if (!isSecure) {
-      console.log('⚠️ HTTP detected in test - returning fallback location');
+      console.log('⚠️ HTTP detected in test - trying IP-based location');
+      const ipLocation = await getLocationFromIP();
+      if (ipLocation) {
+        resolve(ipLocation);
+        return;
+      }
+      
+      console.log('⚠️ IP location failed in test, using fallback');
       resolve({
         latitude: 6.9271, // Colombo, Sri Lanka coordinates
         longitude: 79.8612,
