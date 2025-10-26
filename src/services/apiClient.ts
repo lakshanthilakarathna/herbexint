@@ -168,6 +168,35 @@ class APIClient {
     }));
   }
 
+  // Visits
+  async getVisits() {
+    return this.request('/visits');
+  }
+
+  async getVisit(id: string) {
+    return this.request(`/visits/${id}`);
+  }
+
+  async createVisit(visit: any) {
+    return this.request('/visits', {
+      method: 'POST',
+      body: JSON.stringify(visit),
+    });
+  }
+
+  async updateVisit(id: string, updates: any) {
+    return this.request(`/visits/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteVisit(id: string) {
+    return this.request(`/visits/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // System Logs
   async getLogs() {
     return this.request('/logs');

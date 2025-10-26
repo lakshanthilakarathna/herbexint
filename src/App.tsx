@@ -11,7 +11,7 @@ import { LoginForm } from './components/LoginForm';
 import Orders from './pages/Orders';
 import Customers from './pages/Customers';
 import Products from './pages/Products';
-
+import Visits from './pages/Visits';
 import Users from './pages/Users';
 import SystemLogs from './pages/SystemLogs';
 import CustomerPortal from './pages/CustomerPortal';
@@ -77,9 +77,7 @@ const App = () => (
               element={
                 <ProtectedRoute requiredPermissions={['visits:read']}>
                   <Layout title="Visit Tracking">
-                    <div className="p-8">
-                      <p>Visit tracking functionality coming soon...</p>
-                    </div>
+                    <Visits />
                   </Layout>
                 </ProtectedRoute>
               } 
