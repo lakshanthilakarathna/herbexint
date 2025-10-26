@@ -142,7 +142,7 @@ const Users: React.FC = () => {
     }
   };
 
-  const handleCreateUser = () => {
+  const handleCreateUser = async () => {
     try {
       // Validation
       if (!newUser.name || !newUser.username || !newUser.password) {
@@ -186,19 +186,13 @@ const Users: React.FC = () => {
         updated_at: new Date().toISOString()
       };
 
-      // Save to database instead of localStorage
-      apiClient.createUser(salesRepUser).then(() => {
-        console.log('User saved to database:', salesRepUser.name);
-        // Update state
-        setUsers([...users, salesRepUser]);
-        toast.success(`Sales Representative ${newUser.name} created successfully!`);
-      }).catch(error => {
-        console.error('Failed to save user to database:', error);
-        toast.error('Failed to create user in database');
-      });
-
-      // Update state immediately for UI
-      setUsers([...users, salesRepUser]);
+      // Save to database
+      await apiClient.createUser(salesRepUser);
+      console.log('User saved to database:', salesRepUser.name);
+      
+      // Refresh users from database
+      await fetchUsers();
+      
       setIsCreateDialogOpen(false);
       setNewUser({ name: '', username: '', phone: '', password: '', confirmPassword: '' });
       
