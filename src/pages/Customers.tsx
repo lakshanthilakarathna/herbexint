@@ -584,7 +584,7 @@ const Customers: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t">
                         <span className="text-gray-500">Credit Limit:</span>
-                        <span className="font-semibold">Rs. {customer.credit_limit.toLocaleString()}</span>
+                        <span className="font-semibold">Rs. {(customer.credit_limit || 0).toLocaleString()}</span>
                       </div>
                     </div>
                     
@@ -664,7 +664,7 @@ const Customers: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                  <TableCell>Rs. {customer.credit_limit.toLocaleString()}</TableCell>
+                  <TableCell>Rs. {(customer.credit_limit || 0).toLocaleString()}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button 
@@ -782,7 +782,7 @@ const Customers: React.FC = () => {
                   <div className="space-y-2">
                     <div>
                       <label className="text-xs text-gray-500">Credit Limit</label>
-                      <p className="font-medium">Rs. {selectedCustomer.credit_limit.toLocaleString()}</p>
+                      <p className="font-medium">Rs. {(selectedCustomer.credit_limit || 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <label className="text-xs text-gray-500">Payment Terms</label>

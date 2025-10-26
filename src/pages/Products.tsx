@@ -450,9 +450,9 @@ const Products: React.FC = () => {
         product.brand_name,
         product.product_name,
         product.pack_size.toString(),
-        `Rs. ${product.wholesale_price.toFixed(2)}`,
-        `Rs. ${product.cost_price.toFixed(2)}`,
-        `Rs. ${product.retail_price.toFixed(2)}`,
+        `Rs. ${(product.wholesale_price || 0).toFixed(2)}`,
+        `Rs. ${(product.cost_price || 0).toFixed(2)}`,
+        `Rs. ${(product.retail_price || 0).toFixed(2)}`,
         product.stock_quantity.toString()
       ]);
 
@@ -708,9 +708,9 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
             brand: product.brand_name,
             product: product.product_name,
             pack_size: product.pack_size.toString(),
-            wholesale: `Rs. ${product.wholesale_price.toFixed(2)}`,
-            cost: `Rs. ${product.cost_price.toFixed(2)}`,
-            retail: `Rs. ${product.retail_price.toFixed(2)}`,
+            wholesale: `Rs. ${(product.wholesale_price || 0).toFixed(2)}`,
+            cost: `Rs. ${(product.cost_price || 0).toFixed(2)}`,
+            retail: `Rs. ${(product.retail_price || 0).toFixed(2)}`,
             stock: product.stock_quantity.toString(),
             status: product.status,
             image: product.image_url
@@ -1286,11 +1286,11 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                     <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                       <div className="bg-blue-50 p-2 rounded">
                         <div className="text-xs text-blue-600">Wholesale</div>
-                        <div className="font-bold text-blue-900">Rs. {product.wholesale_price.toFixed(2)}</div>
+                        <div className="font-bold text-blue-900">Rs. {(product.wholesale_price || 0).toFixed(2)}</div>
                       </div>
                       <div className="bg-green-50 p-2 rounded">
                         <div className="text-xs text-green-600">Retail</div>
-                        <div className="font-bold text-green-900">Rs. {product.retail_price.toFixed(2)}</div>
+                        <div className="font-bold text-green-900">Rs. {(product.retail_price || 0).toFixed(2)}</div>
                       </div>
                       <div className="bg-gray-50 p-2 rounded">
                         <div className="text-xs text-gray-600">Pack Size</div>
@@ -1398,13 +1398,13 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                   <TableCell>
                     <div className="space-y-1">
                       <div className="text-sm">
-                        <span className="text-gray-500">Wholesale:</span> <span className="font-medium">Rs. {product.wholesale_price.toFixed(2)}</span>
+                        <span className="text-gray-500">Wholesale:</span> <span className="font-medium">Rs. {(product.wholesale_price || 0).toFixed(2)}</span>
                       </div>
                       <div className="text-sm">
-                        <span className="text-gray-500">Cost:</span> Rs. {product.cost_price.toFixed(2)}
+                        <span className="text-gray-500">Cost:</span> Rs. {(product.cost_price || 0).toFixed(2)}
                       </div>
                       <div className="text-sm">
-                        <span className="text-gray-500">Retail:</span> Rs. {product.retail_price.toFixed(2)}
+                        <span className="text-gray-500">Retail:</span> Rs. {(product.retail_price || 0).toFixed(2)}
                       </div>
                     </div>
                   </TableCell>
@@ -1527,22 +1527,22 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                   <div className="space-y-3">
                     <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                       <span className="text-sm font-medium text-blue-900">Wholesale Price</span>
-                      <span className="text-lg font-bold text-blue-900">Rs. {selectedProduct.wholesale_price.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-blue-900">Rs. {(selectedProduct.wholesale_price || 0).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-sm font-medium text-gray-700">Cost Price</span>
-                      <span className="text-lg font-bold text-gray-900">Rs. {selectedProduct.cost_price.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-gray-900">Rs. {(selectedProduct.cost_price || 0).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                       <span className="text-sm font-medium text-green-900">Retail Price</span>
-                      <span className="text-lg font-bold text-green-900">Rs. {selectedProduct.retail_price.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-green-900">Rs. {(selectedProduct.retail_price || 0).toFixed(2)}</span>
                     </div>
                     <div className="p-3 bg-purple-50 rounded-lg">
                       <label className="text-xs text-purple-700 font-medium">Profit Margin</label>
                       <p className="text-sm font-bold text-purple-900">
-                        Rs. {(selectedProduct.retail_price - selectedProduct.cost_price).toFixed(2)} 
+                        Rs. {((selectedProduct.retail_price || 0) - (selectedProduct.cost_price || 0)).toFixed(2)} 
                         <span className="text-xs ml-1">
-                          ({((selectedProduct.retail_price - selectedProduct.cost_price) / selectedProduct.cost_price * 100).toFixed(1)}%)
+                          ({((selectedProduct.retail_price || 0) - (selectedProduct.cost_price || 0)) / (selectedProduct.cost_price || 1) * 100).toFixed(1)}%)
                         </span>
                       </p>
                     </div>
