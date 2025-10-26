@@ -88,6 +88,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       permission: 'reports:read'
     },
     {
+      title: 'Users',
+      icon: Users,
+      href: '/users',
+      permission: 'users:read'
+    },
+    {
       title: 'Settings',
       icon: Settings,
       href: '/settings',
