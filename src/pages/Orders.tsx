@@ -1747,7 +1747,11 @@ const Orders: React.FC = () => {
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
                       {users
-                        .filter((u: any) => u.role_name === 'Delivery Personnel' || u.role_id === 'delivery-role-id')
+                        .filter((u: any) => {
+                          const isDelivery = u.role_name === 'Delivery Personnel' || u.role_id === 'delivery-role-id';
+                          console.log('User:', u.name, 'role_name:', u.role_name, 'role_id:', u.role_id, 'isDelivery:', isDelivery);
+                          return isDelivery;
+                        })
                         .map((deliveryPerson: any) => (
                           <SelectItem key={deliveryPerson.id} value={deliveryPerson.id}>
                             {deliveryPerson.name}
