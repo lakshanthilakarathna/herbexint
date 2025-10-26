@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
@@ -45,7 +46,8 @@ const Users: React.FC = () => {
     username: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'sales-rep' // Default role
   });
 
   useEffect(() => {
@@ -166,37 +168,47 @@ const Users: React.FC = () => {
         return;
       }
 
-      const salesRepUser: User = {
+      // Determine role based on selection
+      const isDeliveryPerson = newUser.role === 'delivery';
+      const roleId = isDeliveryPerson ? 'delivery-role-id' : 'sales-rep-role-id';
+      const roleName = isDeliveryPerson ? 'Delivery Personnel' : 'Sales Representative';
+      const permissions = isDeliveryPerson ? [
+        'orders:read',
+        'deliveries:read',
+        'deliveries:write'
+      ] : [
+        'orders:read', 'orders:write',
+        'customers:read', 'customers:write',
+        'products:read',
+        'visits:read', 'visits:write'
+      ];
+
+      const newUserData: User = {
         id: 'rep-' + Date.now(),
         name: newUser.name,
         username: newUser.username,
         email: `${newUser.username}@herb.com`, // Auto-generate email from username
         phone: newUser.phone,
-        role_id: 'sales-rep-role-id',
-        role_name: 'Sales Representative',
+        role_id: roleId,
+        role_name: roleName,
         password: newUser.password, // Store for mock login
-        permissions: [
-          'orders:read', 'orders:write',
-          'customers:read', 'customers:write',
-          'products:read',
-          'visits:read', 'visits:write'
-        ],
+        permissions: permissions,
         status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
       // Save to database
-      await apiClient.createUser(salesRepUser);
-      console.log('User saved to database:', salesRepUser.name);
+      await apiClient.createUser(newUserData);
+      console.log('User saved to database:', newUserData.name);
       
       // Refresh users from database
       await fetchUsers();
       
       setIsCreateDialogOpen(false);
-      setNewUser({ name: '', username: '', phone: '', password: '', confirmPassword: '' });
+      setNewUser({ name: '', username: '', phone: '', password: '', confirmPassword: '', role: 'sales-rep' });
       
-      toast.success(`Sales Rep ${newUser.name} created successfully! They can now login with username: ${newUser.username}`);
+      toast.success(`${roleName} ${newUser.name} created successfully! They can now login with username: ${newUser.username}`);
     } catch (error) {
       toast.error('Failed to create user');
       console.error('Error creating user:', error);
@@ -350,6 +362,21 @@ const Users: React.FC = () => {
                 </div>
 
                 <div>
+                  <Label htmlFor="role">
+                    Role <span className="text-red-500">*</span>
+                  </Label>
+                  <Select value={newUser.role} onValueChange={(value: any) => setNewUser({...newUser, role: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sales-rep">Sales Representative</SelectItem>
+                      <SelectItem value="delivery">Delivery Personnel</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="password">
                     Password <span className="text-red-500">*</span>
                   </Label>
@@ -375,28 +402,36 @@ const Users: React.FC = () => {
                   />
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
-                    <strong>Role:</strong> Sales Representative
+                <div className={`${newUser.role === 'delivery' ? 'bg-green' : 'bg-blue'}-50 border border-${newUser.role === 'delivery' ? 'green' : 'blue'}-200 rounded-lg p-3`}>
+                  <p className={`text-sm text-${newUser.role === 'delivery' ? 'green' : 'blue'}-800`}>
+                    <strong>Role:</strong> {newUser.role === 'delivery' ? 'Delivery Personnel' : 'Sales Representative'}
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Can create/manage orders, customers, view products, and track visits
-                  </p>
-                  <p className="text-xs text-blue-500 mt-1">
-                    ❌ Cannot view: Revenue data, Stock alerts, Reports
-                  </p>
+                  {newUser.role === 'delivery' ? (
+                    <p className={`text-xs text-${newUser.role === 'delivery' ? 'green' : 'blue'}-600 mt-1`}>
+                      Can view assigned orders and confirm deliveries with GPS location, photo, and signature
+                    </p>
+                  ) : (
+                    <>
+                      <p className={`text-xs text-${newUser.role === 'delivery' ? 'green' : 'blue'}-600 mt-1`}>
+                        Can create/manage orders, customers, view products, and track visits
+                      </p>
+                      <p className={`text-xs text-${newUser.role === 'delivery' ? 'green' : 'blue'}-500 mt-1`}>
+                        ❌ Cannot view: Revenue data, Stock alerts, Reports
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex justify-end space-x-2 pt-4">
                   <Button variant="outline" onClick={() => {
                     setIsCreateDialogOpen(false);
-                    setNewUser({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
+                    setNewUser({ name: '', username: '', phone: '', password: '', confirmPassword: '', role: 'sales-rep' });
                   }}>
                     Cancel
                   </Button>
                   <Button onClick={handleCreateUser}>
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Create Sales Rep
+                    Create {newUser.role === 'delivery' ? 'Delivery Personnel' : 'Sales Rep'}
                   </Button>
                 </div>
               </div>
