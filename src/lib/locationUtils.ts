@@ -254,6 +254,19 @@ export const testLocationManually = (): Promise<LocationData | null> => {
   return new Promise((resolve) => {
     console.log('🧪 Manual location test starting...');
     
+    // Check if we're on HTTP
+    const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (!isSecure) {
+      console.log('⚠️ HTTP detected in test - returning fallback location');
+      resolve({
+        latitude: 6.9271, // Colombo, Sri Lanka coordinates
+        longitude: 79.8612,
+        address: 'Colombo, Sri Lanka (Approximate location - HTTP connection)'
+      });
+      return;
+    }
+    
     if (!navigator.geolocation) {
       console.log('❌ Geolocation not supported');
       resolve(null);
