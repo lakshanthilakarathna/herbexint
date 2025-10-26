@@ -194,7 +194,6 @@ const Orders: React.FC = () => {
     try {
       if (!user) return; // Wait for user to be loaded
       
-      console.log('Checking for legacy orders to fix...');
       const allOrders = await apiClient.getOrders();
       
       // Map specific timestamp IDs to user IDs
@@ -208,8 +207,6 @@ const Orders: React.FC = () => {
       for (const order of allOrders) {
         // Check if created_by is a timestamp (13-digit number)
         if (/^\d{13}$/.test(order.created_by)) {
-          console.log(`Found legacy order ${order.order_number} with timestamp ID: ${order.created_by}`);
-          
           // Get the correct user ID for this timestamp
           const correctUserId = timestampToUser[order.created_by] || 'legacy-sales-rep';
           
@@ -220,7 +217,6 @@ const Orders: React.FC = () => {
               updated_at: new Date().toISOString()
             });
             fixedCount++;
-            console.log(`Fixed order ${order.order_number} → assigned to ${correctUserId}`);
           } catch (error) {
             console.error(`Failed to fix order ${order.order_number}:`, error);
           }
@@ -228,7 +224,6 @@ const Orders: React.FC = () => {
       }
       
       if (fixedCount > 0) {
-        console.log(`Fixed ${fixedCount} legacy orders`);
         // Refresh orders to show updated data
         setTimeout(() => fetchOrders(), 1000);
       }
@@ -312,6 +307,11 @@ const Orders: React.FC = () => {
     // If it's the current logged-in user, show their name
     if (user?.id === userId) {
       return user.name;
+    }
+    
+    // Safety check for undefined/null userId
+    if (!userId) {
+      return 'Unknown';
     }
     
     // Check if it's a timestamp ID (legacy orders before user ID fix)

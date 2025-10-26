@@ -66,9 +66,6 @@ export const Dashboard: React.FC = () => {
         ? allOrders  // Admin sees all orders
         : allOrders.filter((o: any) => o.created_by === user?.id);  // Sales Rep sees only their orders
       
-      console.log(`Dashboard - User: ${user?.name}, Role: ${user?.role_id}`);
-      console.log(`Dashboard - Showing ${orders.length} out of ${allOrders.length} total orders`);
-      
       // Calculate statistics from filtered orders
       const totalOrders = orders.length;
       const pendingOrders = orders.filter((o: any) => o.status === 'pending').length;
@@ -108,8 +105,6 @@ export const Dashboard: React.FC = () => {
         const minLevel = p.min_stock_level || 10;
         return stock === 0 || stock <= minLevel; // Out of stock OR low stock
       }).length;
-      
-      console.log(`Stock Alerts: ${outOfStockAlerts} products need attention`);
       
       setStats({
         totalOrders,
