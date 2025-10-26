@@ -456,80 +456,104 @@ const Orders: React.FC = () => {
   };
 
   const getCurrentLocation = (): Promise<{latitude: number, longitude: number, address?: string}> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error('Geolocation not supported by this browser'));
         return;
       }
 
-      // Check if location permission is already granted
-      if (navigator.permissions) {
-        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-          if (result.state === 'denied') {
-            reject(new Error('Location access denied. Please enable location permissions in your browser settings.'));
-            return;
-          }
-        });
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          console.log('Location captured:', { latitude, longitude });
-          
-          // Try to get address from coordinates (reverse geocoding)
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-              {
-                headers: {
-                  'User-Agent': 'HERB-Liquor-Wholesale/1.0'
+      console.log('Attempting to get current location for order...');
+      
+      // Try to get location directly first, then check permissions if it fails
+      const tryGetLocation = () => {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            console.log('Location obtained successfully for order:', position.coords);
+            const { latitude, longitude } = position.coords;
+            
+            // Try to get address from coordinates (reverse geocoding)
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+                {
+                  headers: {
+                    'User-Agent': 'HERB-Liquor-Wholesale/1.0'
+                  }
                 }
+              );
+              
+              if (!response.ok) {
+                throw new Error('Reverse geocoding failed');
               }
-            );
-            
-            if (!response.ok) {
-              throw new Error('Reverse geocoding failed');
+              
+              const data = await response.json();
+              const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+              console.log('Address resolved for order:', address);
+              
+              resolve({ latitude, longitude, address });
+            } catch (error) {
+              console.warn('Reverse geocoding failed:', error);
+              // If reverse geocoding fails, just return coordinates
+              resolve({ latitude, longitude, address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` });
             }
+          },
+          (error) => {
+            console.log('Geolocation failed for order, checking permissions...');
             
-            const data = await response.json();
-            const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-            console.log('Address resolved:', address);
-            
-            resolve({ latitude, longitude, address });
-          } catch (error) {
-            console.warn('Reverse geocoding failed:', error);
-            // If reverse geocoding fails, just return coordinates
-            resolve({ latitude, longitude, address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` });
+            // If geolocation fails, check permissions
+            if (navigator.permissions) {
+              navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                console.log('Permission state for order:', result.state);
+                if (result.state === 'denied') {
+                  reject(new Error('Location access denied. Please enable location permissions in your browser settings and refresh the page.'));
+                } else {
+                  // Permission is granted but location still failed
+                  let errorMessage = 'Unable to get your location';
+                  
+                  console.log('Geolocation error details for order:', {
+                    code: error.code,
+                    message: error.message,
+                    PERMISSION_DENIED: error.PERMISSION_DENIED,
+                    POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+                    TIMEOUT: error.TIMEOUT
+                  });
+                  
+                  switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                      errorMessage = 'Location access denied. Please allow location access in your browser settings and refresh the page.';
+                      break;
+                    case error.POSITION_UNAVAILABLE:
+                      errorMessage = 'Location information is unavailable. Please check your GPS/network connection.';
+                      break;
+                    case error.TIMEOUT:
+                      errorMessage = 'Location request timed out. Please try again.';
+                      break;
+                    default:
+                      errorMessage = 'An unknown error occurred while getting your location.';
+                      break;
+                  }
+                  
+                  reject(new Error(errorMessage));
+                }
+              }).catch(() => {
+                // Permission API not supported, use original error
+                reject(new Error('Unable to get your location. Please check your browser settings.'));
+              });
+            } else {
+              // No permission API, use original error
+              reject(new Error('Unable to get your location. Please check your browser settings.'));
+            }
+          },
+          { 
+            enableHighAccuracy: true, 
+            timeout: 15000, // Increased timeout
+            maximumAge: 300000 // 5 minutes
           }
-        },
-        (error) => {
-          console.warn('Geolocation error:', error);
-          let errorMessage = 'Unable to get your location';
-          
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Location access denied. Please allow location access and try again.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information is unavailable. Please check your GPS/network connection.';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'Location request timed out. Please try again.';
-              break;
-            default:
-              errorMessage = 'An unknown error occurred while getting your location.';
-              break;
-          }
-          
-          reject(new Error(errorMessage));
-        },
-        { 
-          enableHighAccuracy: true, 
-          timeout: 10000, 
-          maximumAge: 300000 // 5 minutes
-        }
-      );
+        );
+      };
+
+      // Try to get location
+      tryGetLocation();
     });
   };
 
