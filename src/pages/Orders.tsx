@@ -1016,7 +1016,7 @@ const Orders: React.FC = () => {
                                     </div>
                                   </div>
                                   <div className="text-sm font-semibold text-blue-600 flex-shrink-0 whitespace-nowrap">
-                                    Rs. {(product.wholesale_price || 0).toFixed(2)}
+                                    Rs. {(product.wholesale_price || product.price || 0).toFixed(2)}
                                   </div>
                                 </div>
                               </div>
@@ -1043,7 +1043,7 @@ const Orders: React.FC = () => {
                               <SelectItem key={product.id} value={product.id}>
                                 <div className="flex items-center justify-between w-full">
                                   <span>{product.brand_name} {product.product_name}</span>
-                                  <span className="text-sm font-medium text-blue-600 ml-2">Rs. {(product.wholesale_price || 0).toFixed(2)}</span>
+                                  <span className="text-sm font-medium text-blue-600 ml-2">Rs. {(product.wholesale_price || product.price || 0).toFixed(2)}</span>
                                 </div>
                               </SelectItem>
                             ))}

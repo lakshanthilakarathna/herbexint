@@ -30,6 +30,7 @@ if (!fs.existsSync(dataFile)) {
     customers: [],
     orders: [],
     users: [],
+    visits: [],
     system_logs: []
   };
   fs.writeFileSync(dataFile, JSON.stringify(initialData, null, 2));
@@ -42,7 +43,7 @@ function readData() {
     return JSON.parse(data);
   } catch (error) {
     console.error('Error reading data:', error);
-    return { products: [], customers: [], orders: [], users: [], system_logs: [] };
+    return { products: [], customers: [], orders: [], users: [], visits: [], system_logs: [] };
   }
 }
 
@@ -262,6 +263,60 @@ app.delete('/api/users/:id', (req, res) => {
   data.users.splice(index, 1);
   writeData(data);
   res.json({ message: 'User deleted' });
+});
+
+// VISITS API
+app.get('/api/visits', (req, res) => {
+  const data = readData();
+  res.json(data.visits || []);
+});
+
+app.get('/api/visits/:id', (req, res) => {
+  const data = readData();
+  const visit = data.visits?.find(v => v.id === req.params.id);
+  if (!visit) return res.status(404).json({ message: 'Visit not found' });
+  res.json(visit);
+});
+
+app.post('/api/visits', (req, res) => {
+  const data = readData();
+  const visit = {
+    ...req.body,
+    id: req.body.id || generateId(),
+    created_at: req.body.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  if (!data.visits) data.visits = [];
+  data.visits.push(visit);
+  writeData(data);
+  res.json(visit);
+});
+
+app.put('/api/visits/:id', (req, res) => {
+  const data = readData();
+  if (!data.visits) data.visits = [];
+  const index = data.visits.findIndex(v => v.id === req.params.id);
+  if (index === -1) return res.status(404).json({ message: 'Visit not found' });
+  
+  data.visits[index] = {
+    ...data.visits[index],
+    ...req.body,
+    id: req.params.id,
+    updated_at: new Date().toISOString()
+  };
+  writeData(data);
+  res.json(data.visits[index]);
+});
+
+app.delete('/api/visits/:id', (req, res) => {
+  const data = readData();
+  if (!data.visits) data.visits = [];
+  const index = data.visits.findIndex(v => v.id === req.params.id);
+  if (index === -1) return res.status(404).json({ message: 'Visit not found' });
+  
+  data.visits.splice(index, 1);
+  writeData(data);
+  res.json({ message: 'Visit deleted' });
 });
 
 // LOGS API

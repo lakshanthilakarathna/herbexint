@@ -113,6 +113,18 @@ const Visits: React.FC = () => {
         return;
       }
 
+      // Check if location permission is already granted
+      if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+          if (result.state === 'denied') {
+            reject(new Error('Location access denied. Please enable location permissions in your browser settings.'));
+            return;
+          }
+        }).catch(() => {
+          // Permission API not supported, continue with location request
+        });
+      }
+
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
@@ -162,7 +174,7 @@ const Visits: React.FC = () => {
         },
         { 
           enableHighAccuracy: true, 
-          timeout: 10000, 
+          timeout: 15000, // Increased timeout
           maximumAge: 300000 // 5 minutes
         }
       );
