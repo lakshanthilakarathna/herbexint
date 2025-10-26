@@ -112,11 +112,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     });
   }, [user?.permissions]);
 
-  // Menu items loaded
-  console.log('Menu loaded:', filteredSidebarItems.length, 'items');
-  console.log('Customer Portals visible?', filteredSidebarItems.find(i => i.title === 'Customer Portals') ? 'YES' : 'NO');
-  console.log('Shared Catalogs visible?', filteredSidebarItems.find(i => i.title === 'Shared Catalogs') ? 'YES' : 'NO');
-
   const handleLogout = () => {
     logout();
     navigate('/login');

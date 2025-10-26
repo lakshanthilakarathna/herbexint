@@ -79,7 +79,6 @@ const Customers: React.FC = () => {
       // Fetch from backend API
       const data = await apiClient.getCustomers();
       setCustomers(Array.isArray(data) ? data : []);
-      console.log('Loaded customers from database:', data?.length || 0);
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast.error('Failed to load customers from database');
@@ -142,11 +141,8 @@ const Customers: React.FC = () => {
         updated_at: new Date().toISOString()
       };
       
-      console.log('Creating customer:', customerData);
-      
       // Save to backend API
       const created = await apiClient.createCustomer(customerData);
-      console.log('Customer created successfully:', created);
       
       // Update local state
       setCustomers([created, ...customers]);
