@@ -490,8 +490,8 @@ const Orders: React.FC = () => {
       // Automatically capture location for the order
       let locationData = undefined;
       try {
-        toast.info('Getting your location... Please wait', { duration: 3000 });
-        console.log('🌍 Attempting to get location for order tracking...');
+        toast.info('Getting your GPS location... Please wait', { duration: 3000 });
+        console.log('🌍 Attempting to get GPS location for order tracking...');
         
         const location = await getLocationWithFallback();
         if (location) {
@@ -502,24 +502,21 @@ const Orders: React.FC = () => {
             timestamp: new Date().toISOString()
           };
           
-          // Check if it's a fallback location
-          if (location.address.includes('Fallback') || location.address.includes('HTTP connection') || location.address.includes('IP-based location')) {
-            toast.warning(`Using approximate location: ${location.address}`, { duration: 5000 });
-          } else {
-            toast.success(`Location captured: ${location.address}`, { duration: 4000 });
-          }
-          console.log('✅ Location data captured:', locationData);
-        } else {
-          console.log('ℹ️ No location data available - order will be created without location tracking');
-          toast.warning('Could not capture GPS location. Order will be created without location tracking.', { duration: 6000 });
+          toast.success(`GPS location captured: ${location.address}`, { duration: 4000 });
+          console.log('✅ GPS location data captured:', locationData);
         }
-      } catch (error) {
-        console.log('ℹ️ Location capture failed - order will be created without location tracking:', error);
-        if (error.message.includes('HTTPS')) {
-          toast.error('GPS location requires HTTPS. Please enable HTTPS on your server for GPS location tracking.', { duration: 8000 });
+      } catch (error: any) {
+        console.error('❌ GPS location capture failed:', error);
+        const errorMessage = error?.message || 'Unknown error';
+        
+        if (errorMessage.includes('HTTPS')) {
+          toast.error('GPS requires HTTPS. Your site has HTTPS enabled. Please refresh the page.', { duration: 8000 });
+        } else if (errorMessage.includes('Permission denied')) {
+          toast.error('Location access denied. Please allow location access in your browser settings and refresh.', { duration: 8000 });
         } else {
-          toast.warning('GPS location capture failed. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+          toast.error(`GPS location failed: ${errorMessage}. Order will be created without location.`, { duration: 6000 });
         }
+        console.log('⚠️ Order will be created without location tracking');
       }
 
 
