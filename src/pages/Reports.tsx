@@ -13,9 +13,11 @@ import { CustomerAnalytics } from '@/components/reports/CustomerAnalytics';
 const Reports: React.FC = () => {
   const { user, hasPermission } = useAuth();
   const [dateRange, setDateRange] = useState<string>('week');
+  const [selectedRep, setSelectedRep] = useState<string>('all');
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,10 +31,12 @@ const Reports: React.FC = () => {
       const ordersData = await apiClient.getOrders();
       const productsData = await apiClient.getProducts();
       const customersData = await apiClient.getCustomers();
+      const usersData = await apiClient.getUsers();
 
       setOrders(ordersData);
       setProducts(productsData);
       setCustomers(customersData);
+      setUsers(usersData);
     } catch (error) {
       console.error('Error loading report data:', error);
     } finally {
@@ -64,10 +68,25 @@ const Reports: React.FC = () => {
 
   const filterOrdersByDateRange = (ordersList: any[]) => {
     const { start, end } = getDateRangeFilter();
-    return ordersList.filter(order => {
+    let filtered = ordersList.filter(order => {
       const orderDate = new Date(order.created_at);
       return orderDate >= start && orderDate <= end;
     });
+    
+    // Filter by selected sales rep
+    if (selectedRep !== 'all') {
+      filtered = filtered.filter(order => {
+        // Check both created_by field and any user ID matching
+        return order.created_by === selectedRep || order.user_id === selectedRep;
+      });
+    }
+    
+    return filtered;
+  };
+  
+  // Get sales reps (users with sales rep role)
+  const getSalesReps = () => {
+    return users.filter(u => u.role_name === 'Sales Representative' || u.role_id === 'sales-rep-role-id');
   };
 
   if (loading) {
@@ -86,12 +105,19 @@ const Reports: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Reports & Analytics
+            {selectedRep !== 'all' && (
+              <span className="text-sm font-normal text-gray-600 ml-2">
+                - {getSalesReps().find(r => r.id === selectedRep)?.name || 'Selected Rep'}
+              </span>
+            )}
+          </h1>
           <p className="text-sm text-gray-600 mt-1">View detailed insights and performance metrics</p>
         </div>
 
-        {/* Date Range Selector */}
-        <div className="flex items-center gap-2">
+        {/* Filters */}
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-500" />
             <Select value={dateRange} onValueChange={setDateRange}>
@@ -106,6 +132,21 @@ const Reports: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Sales Rep Filter */}
+          <Select value={selectedRep} onValueChange={setSelectedRep}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="All Sales Reps" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sales Reps</SelectItem>
+              {getSalesReps().map(rep => (
+                <SelectItem key={rep.id} value={rep.id}>
+                  {rep.name || rep.username}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           
           <Button variant="outline" size="sm" disabled>
             <Download className="h-4 w-4 mr-2" />
