@@ -36,57 +36,7 @@ export const getDeviceOptions = (options: LocationOptions = {}): LocationOptions
   };
 };
 
-/**
- * Get location from IP address as fallback
- */
-export const getLocationFromIP = async (): Promise<LocationData | null> => {
-  try {
-    console.log('🌐 Attempting to get location from IP address...');
-    
-    // Try multiple IP geolocation services
-    const services = [
-      'https://ipapi.co/json/',
-      'https://ip-api.com/json/',
-      'https://api.ipgeolocation.io/ipgeo?apiKey=free'
-    ];
-    
-    for (const service of services) {
-      try {
-        const response = await fetch(service, { timeout: 5000 });
-        if (!response.ok) continue;
-        
-        const data = await response.json();
-        
-        // Different services return different field names
-        const lat = data.latitude || data.lat;
-        const lon = data.longitude || data.lon;
-        const city = data.city || data.city_name;
-        const country = data.country_name || data.country;
-        const region = data.region || data.region_name || data.state;
-        
-        if (lat && lon) {
-          const address = [city, region, country].filter(Boolean).join(', ') || `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-          
-          console.log('✅ IP location obtained:', { lat, lon, address });
-          return {
-            latitude: parseFloat(lat),
-            longitude: parseFloat(lon),
-            address: `${address} (IP-based location)`
-          };
-        }
-      } catch (error) {
-        console.warn(`IP service failed: ${service}`, error);
-        continue;
-      }
-    }
-    
-    console.log('❌ All IP location services failed');
-    return null;
-  } catch (error) {
-    console.warn('IP location detection failed:', error);
-    return null;
-  }
-};
+
 
 /**
  * Get address from coordinates using reverse geocoding
@@ -163,103 +113,48 @@ export const getCurrentLocation = (options: LocationOptions = {}): Promise<Locat
 };
 
 /**
- * Get location with fallback handling - tries multiple strategies
+ * Get location - GPS ONLY, no fallback
+ * This function attempts GPS location capture and throws an error if it fails
  */
 export const getLocationWithFallback = async (options: LocationOptions = {}): Promise<LocationData | null> => {
-  console.log('🌍 Attempting to get location with fallback strategies...');
+  console.log('🌍 Attempting GPS location capture...');
   
-  const isMobile = isMobileDevice();
-  let lastError: Error | null = null;
-  
-  // Check if we're on HTTPS or localhost
-  const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  // Check if we're on HTTPS (required for GPS)
+  const isSecure = window.location.protocol === 'https:' || 
+                   window.location.hostname === 'localhost' || 
+                   window.location.hostname === '127.0.0.1';
   
   if (!isSecure) {
-    console.log('⚠️ HTTP detected - GPS geolocation requires HTTPS. Attempting GPS anyway...');
-    // Try GPS first even on HTTP - some browsers may allow it
-    try {
-      console.log('📍 Attempting GPS geolocation on HTTP...');
-      const location = await getCurrentLocation({
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      });
-      console.log('✅ GPS location captured on HTTP:', location);
-      return location;
-    } catch (error) {
-      console.log('❌ GPS failed on HTTP:', error);
-      // Show helpful error message for HTTPS requirement
-      throw new Error('GPS location requires HTTPS. Please enable HTTPS on your server or use localhost for GPS location tracking.');
-    }
+    throw new Error('GPS location requires HTTPS. Your site is now HTTPS enabled, please refresh and try again.');
   }
   
-  // Strategy 1: High accuracy with short timeout
+  // Try GPS with high accuracy first
   try {
-    console.log('📍 Strategy 1: High accuracy (8s timeout)');
+    console.log('📍 Attempting high accuracy GPS location...');
     const location = await getCurrentLocation({
       enableHighAccuracy: true,
-      timeout: 8000,
+      timeout: 10000,
       maximumAge: 0
     });
-    console.log('✅ Location captured with high accuracy:', location);
+    console.log('✅ GPS location captured:', location);
     return location;
   } catch (error) {
-    console.warn('❌ Strategy 1 failed:', error);
-    lastError = error as Error;
+    console.warn('❌ High accuracy GPS failed, trying lower accuracy...');
+    
+    // Try with lower accuracy as fallback
+    try {
+      const location = await getCurrentLocation({
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 300000 // 5 minutes
+      });
+      console.log('✅ GPS location captured (lower accuracy):', location);
+      return location;
+    } catch (secondError) {
+      console.error('❌ GPS location failed completely:', secondError);
+      throw new Error('Failed to get GPS location. Please ensure location services are enabled and try again.');
+    }
   }
-  
-  // Strategy 2: Low accuracy with medium timeout
-  try {
-    console.log('📍 Strategy 2: Low accuracy (12s timeout)');
-    const location = await getCurrentLocation({
-      enableHighAccuracy: false,
-      timeout: 12000,
-      maximumAge: 300000 // 5 minutes
-    });
-    console.log('✅ Location captured with low accuracy:', location);
-    return location;
-  } catch (error) {
-    console.warn('❌ Strategy 2 failed:', error);
-    lastError = error as Error;
-  }
-  
-  // Strategy 3: Cached location with long timeout
-  try {
-    console.log('📍 Strategy 3: Cached location (15s timeout)');
-    const location = await getCurrentLocation({
-      enableHighAccuracy: false,
-      timeout: 15000,
-      maximumAge: 600000 // 10 minutes
-    });
-    console.log('✅ Location captured from cache:', location);
-    return location;
-  } catch (error) {
-    console.warn('❌ Strategy 3 failed:', error);
-    lastError = error as Error;
-  }
-  
-  // Strategy 4: Very permissive settings
-  try {
-    console.log('📍 Strategy 4: Very permissive (20s timeout)');
-    const location = await getCurrentLocation({
-      enableHighAccuracy: false,
-      timeout: 20000,
-      maximumAge: 1800000 // 30 minutes
-    });
-    console.log('✅ Location captured with permissive settings:', location);
-    return location;
-  } catch (error) {
-    console.warn('❌ Strategy 4 failed:', error);
-    lastError = error as Error;
-  }
-  
-  // All strategies failed - return fallback location
-  console.log('❌ All location strategies failed. Using fallback location.');
-  return {
-    latitude: 6.9271, // Colombo, Sri Lanka coordinates
-    longitude: 79.8612,
-    address: 'Colombo, Sri Lanka (Fallback location)'
-  };
 };
 
 /**
