@@ -334,11 +334,13 @@ const Orders: React.FC = () => {
   // Helper function to get filtered products for suggestions
   const getFilteredProducts = () => {
     return products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+      const matchesSearch = product.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
                            product.brand_name?.toLowerCase().includes(productSearch.toLowerCase()) ||
                            product.product_name?.toLowerCase().includes(productSearch.toLowerCase()) ||
                            product.manufacturer?.toLowerCase().includes(productSearch.toLowerCase());
-      const matchesCategory = productCategoryFilter === 'all' || product.category === productCategoryFilter;
+      // Safety check for undefined/null category
+      const productCategory = product.category || 'liquor'; // Default to 'liquor'
+      const matchesCategory = productCategoryFilter === 'all' || productCategory === productCategoryFilter;
       return matchesSearch && matchesCategory && product.stock_quantity > 0;
     }).slice(0, 10); // Limit to 10 suggestions
   };
