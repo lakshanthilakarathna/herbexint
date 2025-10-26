@@ -185,7 +185,6 @@ const Visits: React.FC = () => {
       });
       setSelectedPhotos([]);
       setPhotoPreviews([]);
-      setLocationData(null);
       
       toast.success('Visit created successfully!');
     } catch (error) {
@@ -348,7 +347,7 @@ const Visits: React.FC = () => {
               <DialogHeader>
                 <DialogTitle>Check In to Visit</DialogTitle>
                 <DialogDescription>
-                  Log a new customer visit with location and notes
+                  Log a new customer visit with notes
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -567,8 +566,6 @@ const Visits: React.FC = () => {
                         <span>{getDuration(visit)}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">{visit.location.address}</span>
                       </div>
                       {visit.notes && (
                         <div className="text-gray-600">
@@ -633,7 +630,6 @@ const Visits: React.FC = () => {
                   <TableHead>Duration</TableHead>
                   <TableHead>Purpose</TableHead>
                   <TableHead>Outcome</TableHead>
-                  <TableHead>Location</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -653,8 +649,6 @@ const Visits: React.FC = () => {
                     <TableCell>{getOutcomeBadge(visit.outcome)}</TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        <span className="truncate max-w-[150px]">{visit.location.address}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -768,26 +762,6 @@ const Visits: React.FC = () => {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-500 mb-3">Location</h4>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm text-blue-800">{selectedVisit.location.address}</p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        📍 {selectedVisit.location.latitude.toFixed(6)}, {selectedVisit.location.longitude.toFixed(6)}
-                      </p>
-                      <a
-                        href={`https://www.google.com/maps?q=${selectedVisit.location.latitude},${selectedVisit.location.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline mt-2 inline-block"
-                      >
-                        View on Google Maps →
-                      </a>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {selectedVisit.notes && (
