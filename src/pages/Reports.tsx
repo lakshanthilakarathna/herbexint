@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { Download, Filter } from 'lucide-react';
+import { apiClient } from '@/services/apiClient';
 import { SalesSummary } from '@/components/reports/SalesSummary';
 import { ProductPerformance } from '@/components/reports/ProductPerformance';
 import { StockStatus } from '@/components/reports/StockStatus';
@@ -27,10 +28,10 @@ const Reports: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Load data from localStorage
-      const ordersData = JSON.parse(localStorage.getItem('orders') || '[]');
-      const productsData = JSON.parse(localStorage.getItem('products') || '[]');
-      const customersData = JSON.parse(localStorage.getItem('customers') || '[]');
+      // Load data from API backend
+      const ordersData = await apiClient.getOrders();
+      const productsData = await apiClient.getProducts();
+      const customersData = await apiClient.getCustomers();
 
       setOrders(ordersData);
       setProducts(productsData);

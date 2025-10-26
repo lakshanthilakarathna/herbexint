@@ -76,7 +76,7 @@ const Customers: React.FC = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      // Fetch from DynamoDB
+      // Fetch from backend API
       const data = await apiClient.getCustomers();
       setCustomers(Array.isArray(data) ? data : []);
       console.log('Loaded customers from database:', data?.length || 0);
@@ -111,8 +111,16 @@ const Customers: React.FC = () => {
         return;
       }
 
+      // Generate ID (fallback if crypto.randomUUID is not available)
+      const generateId = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+        return 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+      };
+
       const customerData: Customer = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: newCustomer.name || '',
         type: newCustomer.type || 'bar',
         email: newCustomer.email || '',
@@ -134,8 +142,11 @@ const Customers: React.FC = () => {
         updated_at: new Date().toISOString()
       };
       
-      // Save to DynamoDB
+      console.log('Creating customer:', customerData);
+      
+      // Save to backend API
       const created = await apiClient.createCustomer(customerData);
+      console.log('Customer created successfully:', created);
       
       // Update local state
       setCustomers([created, ...customers]);
@@ -160,9 +171,10 @@ const Customers: React.FC = () => {
         territory_id: user?.territory_id || ''
       });
       toast.success('Customer created successfully');
-    } catch (error) {
-      toast.error('Failed to create customer');
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Unknown error occurred';
       console.error('Error creating customer:', error);
+      toast.error(`Failed to create customer: ${errorMessage}`);
     }
   };
 
@@ -180,7 +192,7 @@ const Customers: React.FC = () => {
     try {
       if (!editCustomer.id) return;
       
-      // Update in DynamoDB
+      // Update in backend API
       const updated = await apiClient.updateCustomer(editCustomer.id, editCustomer);
       
       // Update local state
@@ -199,7 +211,7 @@ const Customers: React.FC = () => {
 
   const handleDeleteCustomer = async (customerId: string) => {
     try {
-      // Delete from DynamoDB
+      // Delete from backend API
       await apiClient.deleteCustomer(customerId);
       
       // Update local state

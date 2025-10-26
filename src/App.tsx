@@ -15,7 +15,9 @@ import Products from './pages/Products';
 import Users from './pages/Users';
 import SystemLogs from './pages/SystemLogs';
 import CustomerPortal from './pages/CustomerPortal';
+import CustomerPortals from './pages/CustomerPortals';
 import ProductCatalog from './pages/ProductCatalog';
+import SharedCatalogs from './pages/SharedCatalogs';
 import Reports from './pages/Reports';
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -126,6 +128,26 @@ const App = () => (
             />
             <Route path="/catalog" element={<ProductCatalog />} />
             <Route path="/customer-portal/:portalId" element={<CustomerPortal />} />
+            <Route 
+              path="/customer-portals" 
+              element={
+                <ProtectedRoute requiredPermissions={['customers:read']}>
+                  <Layout title="Customer Portals">
+                    <CustomerPortals />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/shared-catalogs" 
+              element={
+                <ProtectedRoute requiredPermissions={['products:read']}>
+                  <Layout title="Shared Catalogs">
+                    <SharedCatalogs />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

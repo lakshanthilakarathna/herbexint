@@ -298,7 +298,7 @@ const CustomerPortal: React.FC = () => {
         updated_at: new Date().toISOString()
       };
 
-      // Save order via API to DynamoDB
+      // Save order via API to backend API
       const orderToSave = {
         id: newOrder.id,
         order_number: newOrder.order_number,

@@ -52,3 +52,5 @@ coverage/
 
 # Misc
 .env.test
+backend/data.json
+backend/node_modules/

@@ -123,7 +123,7 @@ const Orders: React.FC = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      // Fetch from DynamoDB only (no localStorage)
+      // Fetch from backend API only (no localStorage)
       const data = await apiClient.getOrders();
       const allOrders = Array.isArray(data) ? data : [];
       
@@ -140,7 +140,7 @@ const Orders: React.FC = () => {
 
   const fetchCustomers = async () => {
     try {
-      // Fetch from DynamoDB
+      // Fetch from backend API
       const data = await apiClient.getCustomers();
       const formattedCustomers = Array.isArray(data) ? data.map((c: any) => ({
         id: c.id,
@@ -158,7 +158,7 @@ const Orders: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      // Fetch from DynamoDB
+      // Fetch from backend API
       const data = await apiClient.getProducts();
       // Filter out customer portal and catalog entries
       const actualProducts = Array.isArray(data) ? data.filter((p: any) => 
@@ -581,7 +581,7 @@ const Orders: React.FC = () => {
       
       console.log('Created order data:', newOrderData);
       
-      // Save to DynamoDB
+      // Save to backend API
       const created = await apiClient.createOrder(newOrderData);
       
       // Update product stock quantities

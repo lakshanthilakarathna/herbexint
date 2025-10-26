@@ -74,7 +74,7 @@ export default {
         xl: "calc(var(--radius) + 4px)",
       },
       backgroundImage: {
-        "gradient-medical": "var(--gradient-liquor)",
+        "gradient-liquor": "var(--gradient-liquor)",
         "gradient-warm": "var(--gradient-warm)",
         "gradient-mint": "var(--gradient-mint)",
         "gradient-bg": "var(--gradient-bg)",

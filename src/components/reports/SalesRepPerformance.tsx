@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Trophy, TrendingUp, Award } from 'lucide-react';
+import { apiClient } from '@/services/apiClient';
 
 interface SalesRepPerformanceProps {
   orders: any[];
@@ -9,19 +10,38 @@ interface SalesRepPerformanceProps {
 }
 
 export const SalesRepPerformance: React.FC<SalesRepPerformanceProps> = ({ orders, dateRange }) => {
-  // Default sales reps
-  const defaultReps = [
+  const [allReps, setAllReps] = useState([
     { id: 'admin-user-id', name: 'Admin User' },
     { id: 'sales-rep-1', name: 'Sales Rep 1' },
     { id: 'sales-rep-2', name: 'Sales Rep 2' }
-  ];
+  ]);
 
-  // Get users from localStorage
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  const salesReps = users.filter((u: any) => u.role_id === 'sales-rep-role-id');
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        // Load users from API
+        const users = await apiClient.getUsers();
+        const salesReps = users.filter((u: any) => u.role_id === 'sales-rep-role-id').map((u: any) => ({
+          id: u.id,
+          name: u.name
+        }));
 
-  // Combine default and dynamic reps
-  const allReps = [...defaultReps, ...salesReps];
+        // Default sales reps
+        const defaultReps = [
+          { id: 'admin-user-id', name: 'Admin User' },
+          { id: 'sales-rep-1', name: 'Sales Rep 1' },
+          { id: 'sales-rep-2', name: 'Sales Rep 2' }
+        ];
+
+        // Combine default and dynamic reps
+        setAllReps([...defaultReps, ...salesReps]);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    };
+
+    loadUsers();
+  }, []);
 
   // Calculate metrics per rep
   const repPerformance = allReps.map(rep => {

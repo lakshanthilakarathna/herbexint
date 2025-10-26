@@ -35,9 +35,10 @@ A complete web-based sales management system for HERB liquor wholesale company w
 - Email: `admin@herb.com`
 - Password: `password123`
 
-**Sales Representative:**
-- Email: `rep@herb.com`
-- Password: `password123`
+**Sales Representatives:**
+- Sales Rep 1 Email: `sales1@herb.com` / Username: `sales1`
+- Sales Rep 2 Email: `sales2@herb.com` / Username: `sales2`
+- Password: `password123` (for all accounts)
 
 ## ✨ Features
 

@@ -92,7 +92,7 @@ const Products: React.FC = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      // Fetch from DynamoDB via API Gateway
+      // Fetch from backend API
       const data = await apiClient.getProducts();
       // Filter out customer portal and shared catalog entries
       const actualProducts = Array.isArray(data) ? data.filter((p: any) => 
@@ -109,7 +109,7 @@ const Products: React.FC = () => {
     }
   };
 
-  // Compress image to fit DynamoDB's 400KB item size limit
+  // Compress image to fit backend API's 400KB item size limit
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -143,7 +143,7 @@ const Products: React.FC = () => {
           let quality = 0.7;
           let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
           
-          // DynamoDB has 400KB limit, but we need room for other fields
+          // backend API has 400KB limit, but we need room for other fields
           // Target max 100KB for image (base64)
           const maxSizeBytes = 100 * 1024;
           
@@ -179,7 +179,7 @@ const Products: React.FC = () => {
       
       try {
         toast.info('Compressing image...');
-        // Compress image to fit in DynamoDB (400KB limit)
+        // Compress image to fit in backend API (400KB limit)
         const compressedDataUrl = await compressImage(file);
         setImagePreview(compressedDataUrl);
         setNewProduct({...newProduct, image_url: compressedDataUrl});
@@ -208,7 +208,7 @@ const Products: React.FC = () => {
       
       try {
         toast.info('Compressing image...');
-        // Compress image to fit in DynamoDB (400KB limit)
+        // Compress image to fit in backend API (400KB limit)
         const compressedDataUrl = await compressImage(file);
         setEditImagePreview(compressedDataUrl);
         setEditProduct({...editProduct, image_url: compressedDataUrl});
@@ -282,17 +282,17 @@ const Products: React.FC = () => {
       
       console.log('Creating product with data:', productData);
       
-      // Check total item size (DynamoDB has 400KB limit)
+      // Check total item size (backend API has 400KB limit)
       const itemSizeBytes = new Blob([JSON.stringify(productData)]).size;
       console.log(`Product item size: ${(itemSizeBytes / 1024).toFixed(2)} KB`);
       
       if (itemSizeBytes > 380 * 1024) { // 380KB to leave some margin
         toast.error('Product data too large for database. Please use a smaller image or remove the image.');
-        console.error(`Item size ${itemSizeBytes} bytes exceeds DynamoDB limit`);
+        console.error(`Item size ${itemSizeBytes} bytes exceeds backend API limit`);
         return;
       }
       
-      // Save to DynamoDB via API Gateway
+      // Save to backend API via API Gateway
       toast.info('Saving product to database...');
       const createdProduct = await apiClient.createProduct(productData);
       
@@ -322,7 +322,7 @@ const Products: React.FC = () => {
       });
       setSelectedImage(null);
       setImagePreview('');
-      toast.success('Product saved to DynamoDB database successfully!');
+      toast.success('Product saved successfully!');
     } catch (error: any) {
       console.error('Error creating product:', error);
       const errorMessage = error.message || 'Failed to save product to database';
@@ -352,7 +352,7 @@ const Products: React.FC = () => {
     try {
       if (!editProduct.id) return;
       
-      // Update in DynamoDB
+      // Update in backend API
       const updated = await apiClient.updateProduct(editProduct.id, editProduct);
       
       // Update local state
@@ -372,7 +372,7 @@ const Products: React.FC = () => {
 
   const handleDeleteProduct = async (productId: string) => {
     try {
-      // Delete from DynamoDB
+      // Delete from backend API
       await apiClient.deleteProduct(productId);
       
       // Update local state
@@ -413,7 +413,7 @@ const Products: React.FC = () => {
       let successCount = 0;
       let errorCount = 0;
       
-      // Delete each product from DynamoDB
+      // Delete each product from backend API
       for (const productId of selectedProductIds) {
         try {
           await apiClient.deleteProduct(productId);
@@ -612,6 +612,7 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
       
       // Save catalog metadata AND full product data to database
       const catalogMetadata = {
+        id: 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9), // Generate unique ID
         catalog_id: catalogId,
         title: catalogTitle,
         company_name: companyName,
@@ -631,18 +632,30 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
         stock_quantity: 0
       };
       
-      try {
-        await apiClient.createProduct(catalogMetadata);
-        console.log('Catalog metadata saved to database');
-      } catch (apiError) {
-        console.error('Failed to save catalog metadata:', apiError);
-      }
+      // Save to backend API
+      const savedCatalog = await apiClient.createProduct(catalogMetadata);
+      console.log('Catalog metadata saved to database:', savedCatalog);
       
       // Generate shareable URL
       const catalogUrl = `${window.location.origin}/catalog?id=${catalogId}`;
       
-      // Copy to clipboard
-      navigator.clipboard.writeText(catalogUrl).then(() => {
+      // Copy to clipboard with fallback
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(catalogUrl);
+        } else {
+          // Fallback for browsers without clipboard API
+          const textArea = document.createElement('textarea');
+          textArea.value = catalogUrl;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
+        
         toast.success(
           <div>
             <p className="font-semibold">{companyName} catalog link copied!</p>
@@ -651,12 +664,21 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
           </div>,
           { duration: 6000 }
         );
-      }).catch(() => {
-        toast.success(`Catalog link: ${catalogUrl}`, { duration: 5000 });
-      });
+      } catch (clipboardError) {
+        // If clipboard copy fails, just show the URL
+        toast.success(
+          <div>
+            <p className="font-semibold">{companyName} catalog created!</p>
+            <p className="text-xs mt-1">{filteredProducts.length} products • Expires in 3 days</p>
+            <p className="text-xs font-mono mt-2 bg-gray-100 p-2 rounded break-all">{catalogUrl}</p>
+            <p className="text-xs text-gray-500 mt-1">Copy this link manually</p>
+          </div>,
+          { duration: 8000 }
+        );
+      }
     } catch (error) {
-      toast.error('Failed to generate catalog link');
       console.error('Error generating catalog:', error);
+      toast.error(`Failed to generate catalog link: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -762,6 +784,11 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
       spirits: { color: 'bg-purple-100 text-purple-800', label: 'Spirits' },
       other: { color: 'bg-gray-100 text-gray-800', label: 'Other' }
     };
+    
+    // Safety check for undefined/null category
+    if (!category || typeof category !== 'string') {
+      category = 'liquor'; // Default to 'liquor'
+    }
     
     const config = categoryConfig[category as keyof typeof categoryConfig] || categoryConfig.liquor;
     
