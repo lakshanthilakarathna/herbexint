@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
+import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star, MapPin } from 'lucide-react';
 import { generateAdminOrderNumber, generateSalesRepOrderNumber } from '@/lib/orderNumberGenerator';
 
 interface Order {
