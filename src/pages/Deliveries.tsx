@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
-import { Search, Package, CheckCircle, Clock, Eye, Truck, MapPin } from 'lucide-react';
+import { Search, Package, CheckCircle, Clock, Eye, Truck, MapPin, Filter } from 'lucide-react';
 import { DeliveryConfirmation } from '@/components/DeliveryConfirmation';
 
 interface Order {
@@ -29,7 +30,7 @@ const Deliveries: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('shipped'); // Show shipped (ready for delivery)
+  const [statusFilter, setStatusFilter] = useState<string>('all'); // Show all assigned orders by default
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -116,7 +117,7 @@ const Deliveries: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">My Delivery Orders</h1>
-        <p className="text-sm text-gray-600 mt-1">View and manage orders assigned to you for delivery</p>
+        <p className="text-sm text-gray-600 mt-1">View and manage your assigned delivery orders (current and past)</p>
       </div>
 
       {/* Stats Cards */}
@@ -151,7 +152,7 @@ const Deliveries: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <div>
               <CardTitle>My Delivery Orders</CardTitle>
-              <CardDescription>Orders assigned to you for delivery</CardDescription>
+              <CardDescription>Orders assigned to you for delivery (current and past)</CardDescription>
             </div>
             <div className="flex gap-2">
               <div className="relative">
@@ -163,6 +164,17 @@ const Deliveries: React.FC = () => {
                   className="pl-8 w-full sm:w-64"
                 />
               </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Orders</SelectItem>
+                  <SelectItem value="shipped">Ready for Delivery</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -170,9 +182,14 @@ const Deliveries: React.FC = () => {
           {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No orders assigned yet</p>
+              <p className="text-gray-500">No orders found</p>
               <p className="text-sm text-gray-400 mt-2">
-                Ask your admin to assign orders to you from the Orders page
+                {statusFilter === 'all' 
+                  ? 'No orders have been assigned to you yet'
+                  : statusFilter === 'shipped'
+                  ? 'No orders ready for delivery'
+                  : 'No completed deliveries found'
+                }
               </p>
             </div>
           ) : (
