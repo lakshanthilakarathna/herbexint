@@ -19,11 +19,12 @@ export const SalesSummary: React.FC<SalesSummaryProps> = ({ orders, dateRange })
   }, 0);
 
   // Calculate previous period for comparison (placeholder)
-  const prevPeriodRevenue = totalRevenue * 0.85; // Mock comparison
+  const prevPeriodRevenue = (totalRevenue || 0) * 0.85; // Mock comparison
   const percentageChange = prevPeriodRevenue > 0 
-    ? ((totalRevenue - prevPeriodRevenue) / prevPeriodRevenue * 100).toFixed(1)
+    ? ((totalRevenue || 0) - prevPeriodRevenue) / prevPeriodRevenue * 100
     : 0;
-  const isPositive = totalRevenue > prevPeriodRevenue;
+  const percentageChangeFormatted = typeof percentageChange === 'number' ? percentageChange.toFixed(1) : '0.0';
+  const isPositive = (totalRevenue || 0) > prevPeriodRevenue;
 
   // Prepare data for daily trend chart (simple representation)
   const dailySales = orders.reduce((acc: any, order: any) => {
@@ -52,12 +53,12 @@ export const SalesSummary: React.FC<SalesSummaryProps> = ({ orders, dateRange })
               {isPositive ? (
                 <Badge variant="default" className="bg-green-500">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  {percentageChange}%
+                  {percentageChangeFormatted}%
                 </Badge>
               ) : (
                 <Badge variant="destructive">
                   <TrendingDown className="h-3 w-3 mr-1" />
-                  {Math.abs(Number(percentageChange))}%
+                  {Math.abs(Number(percentageChangeFormatted))}%
                 </Badge>
               )}
               <span className="ml-2 text-gray-500">vs previous period</span>

@@ -26,7 +26,8 @@ export const FinancialAnalysis: React.FC<FinancialAnalysisProps> = ({ orders, pr
   });
 
   const totalProfit = totalRevenue - totalCost;
-  const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+  const safeProfitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+  const safeProfitMargin = typeof safeProfitMargin === 'number' && !isNaN(safeProfitMargin) ? safeProfitMargin : 0;
 
   // Product profitability
   const productProfits: Record<string, any> = {};
@@ -135,8 +136,8 @@ export const FinancialAnalysis: React.FC<FinancialAnalysisProps> = ({ orders, pr
             <DollarSign className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${profitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {profitMargin.toFixed(1)}%
+            <div className={`text-2xl font-bold ${safeProfitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {safeProfitMargin.toFixed(1)}%
             </div>
             <p className="text-xs text-gray-500 mt-1">Margin percentage</p>
           </CardContent>
@@ -193,9 +194,9 @@ export const FinancialAnalysis: React.FC<FinancialAnalysisProps> = ({ orders, pr
                 <div className="w-full bg-gray-200 rounded-full h-6">
                   <div 
                     className="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2"
-                    style={{ width: `${profitMargin}%` }}
+                    style={{ width: `${safeProfitMargin}%` }}
                   >
-                    <span className="text-xs text-white font-bold">{profitMargin.toFixed(1)}%</span>
+                    <span className="text-xs text-white font-bold">{safeProfitMargin.toFixed(1)}%</span>
                   </div>
                 </div>
               )}

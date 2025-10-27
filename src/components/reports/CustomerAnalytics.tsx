@@ -113,7 +113,8 @@ export const CustomerAnalytics: React.FC<CustomerAnalyticsProps> = ({ orders, cu
             {topCustomers.length > 0 ? (
               <div className="space-y-4">
                 {topCustomers.map((customer: any, index: number) => {
-                  const percentage = totalRevenue > 0 ? (customer.totalRevenue / totalRevenue) * 100 : 0;
+                  const safePercentage = totalRevenue > 0 ? (customer.totalRevenue / totalRevenue) * 100 : 0;
+                  const safePercentage = typeof safePercentage === 'number' && !isNaN(safePercentage) ? safePercentage : 0;
                   return (
                     <div key={customer.customerId} className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -131,10 +132,10 @@ export const CustomerAnalytics: React.FC<CustomerAnalyticsProps> = ({ orders, cu
                         <div className="flex-1 bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-amber-600 h-2 rounded-full" 
-                            style={{ width: `${percentage}%` }}
+                            style={{ width: `${safePercentage}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-500">{percentage.toFixed(1)}%</span>
+                        <span className="text-xs text-gray-500">{safePercentage.toFixed(1)}%</span>
                       </div>
                       <div className="text-xs text-gray-500">
                         {customer.orderCount} orders
@@ -161,7 +162,8 @@ export const CustomerAnalytics: React.FC<CustomerAnalyticsProps> = ({ orders, cu
             {typeData.length > 0 ? (
               <div className="space-y-4">
                 {typeData.map((item) => {
-                  const percentage = totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0;
+                  const safePercentage = totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0;
+                  const safePercentage = typeof safePercentage === 'number' && !isNaN(safePercentage) ? safePercentage : 0;
                   return (
                     <div key={item.type} className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -176,10 +178,10 @@ export const CustomerAnalytics: React.FC<CustomerAnalyticsProps> = ({ orders, cu
                         <div className="flex-1 bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-amber-600 h-2 rounded-full" 
-                            style={{ width: `${percentage}%` }}
+                            style={{ width: `${safePercentage}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-500">{percentage.toFixed(1)}%</span>
+                        <span className="text-xs text-gray-500">{safePercentage.toFixed(1)}%</span>
                       </div>
                     </div>
                   );
