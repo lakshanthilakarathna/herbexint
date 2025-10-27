@@ -556,6 +556,8 @@ app.post('/api/customer-portals/:portalId/orders', (req, res) => {
   };
   
   data.orders.push(mainOrder);
+  console.log(`✅ Main order created with ID: ${mainOrder.id}`);
+  console.log(`📊 Total main orders: ${data.orders.length}`);
   
   // Update customer portal statistics
   const portal = data.customer_portals.find(p => 
@@ -689,8 +691,18 @@ app.patch('/api/orders/:id/status', (req, res) => {
   if (!data.orders) data.orders = [];
   if (!data.customer_orders) data.customer_orders = [];
   
+  console.log(`🔍 Looking for order ID: ${req.params.id}`);
+  console.log(`📊 Main orders count: ${data.orders.length}`);
+  console.log(`📊 Customer orders count: ${data.customer_orders.length}`);
+  
   const index = data.orders.findIndex(o => o.id === req.params.id);
-  if (index === -1) return res.status(404).json({ message: 'Order not found' });
+  console.log(`🔍 Main order index: ${index}`);
+  
+  if (index === -1) {
+    console.log(`❌ Order ${req.params.id} not found in main orders`);
+    console.log(`📋 Available main order IDs:`, data.orders.map(o => o.id));
+    return res.status(404).json({ message: 'Order not found' });
+  }
   
   const newStatus = req.body.status;
   if (!newStatus) return res.status(400).json({ message: 'Status is required' });
@@ -706,6 +718,8 @@ app.patch('/api/orders/:id/status', (req, res) => {
   
   // Sync with customer portal orders if this is a customer portal order
   const customerOrderIndex = data.customer_orders.findIndex(co => co.id === req.params.id);
+  console.log(`🔍 Customer order index: ${customerOrderIndex}`);
+  
   if (customerOrderIndex !== -1) {
     console.log(`🔄 Syncing with customer portal order ${req.params.id}`);
     data.customer_orders[customerOrderIndex] = {
@@ -716,6 +730,7 @@ app.patch('/api/orders/:id/status', (req, res) => {
     console.log(`✅ Customer portal order synced: ${newStatus}`);
   } else {
     console.log(`ℹ️ Order ${req.params.id} not found in customer_orders (not a customer portal order)`);
+    console.log(`📋 Available customer order IDs:`, data.customer_orders.map(co => co.id));
   }
   
   writeData(data);
