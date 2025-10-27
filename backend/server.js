@@ -34,6 +34,7 @@ if (!fs.existsSync(dataFile)) {
     users: [],
     visits: [],
     customer_portals: [],
+    customer_orders: [],
     system_logs: []
   };
   fs.writeFileSync(dataFile, JSON.stringify(initialData, null, 2));
@@ -46,7 +47,7 @@ function readData() {
     return JSON.parse(data);
   } catch (error) {
     console.error('Error reading data:', error);
-    return { products: [], customers: [], orders: [], users: [], visits: [], customer_portals: [], system_logs: [] };
+    return { products: [], customers: [], orders: [], users: [], visits: [], customer_portals: [], customer_orders: [], system_logs: [] };
   }
 }
 
@@ -456,6 +457,71 @@ app.delete('/api/customer-portals/:id', (req, res) => {
   data.customer_portals.splice(index, 1);
   writeData(data);
   res.json({ message: 'Customer portal deleted' });
+});
+
+// CUSTOMER PORTAL ORDERS API
+app.get('/api/customer-portals/:portalId/orders', (req, res) => {
+  const data = readData();
+  if (!data.customer_orders) data.customer_orders = [];
+  const portalOrders = data.customer_orders.filter(order => order.portal_id === req.params.portalId);
+  res.json(portalOrders);
+});
+
+app.post('/api/customer-portals/:portalId/orders', (req, res) => {
+  const data = readData();
+  if (!data.customer_orders) data.customer_orders = [];
+  const order = {
+    ...req.body,
+    id: req.body.id || generateId(),
+    portal_id: req.params.portalId,
+    created_at: req.body.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  data.customer_orders.push(order);
+  writeData(data);
+  res.json(order);
+});
+
+app.get('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
+  const data = readData();
+  if (!data.customer_orders) data.customer_orders = [];
+  const order = data.customer_orders.find(o => 
+    o.id === req.params.orderId && o.portal_id === req.params.portalId
+  );
+  if (!order) return res.status(404).json({ message: 'Customer order not found' });
+  res.json(order);
+});
+
+app.put('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
+  const data = readData();
+  if (!data.customer_orders) data.customer_orders = [];
+  const index = data.customer_orders.findIndex(o => 
+    o.id === req.params.orderId && o.portal_id === req.params.portalId
+  );
+  if (index === -1) return res.status(404).json({ message: 'Customer order not found' });
+  
+  data.customer_orders[index] = {
+    ...data.customer_orders[index],
+    ...req.body,
+    id: req.params.orderId,
+    portal_id: req.params.portalId,
+    updated_at: new Date().toISOString()
+  };
+  writeData(data);
+  res.json(data.customer_orders[index]);
+});
+
+app.delete('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
+  const data = readData();
+  if (!data.customer_orders) data.customer_orders = [];
+  const index = data.customer_orders.findIndex(o => 
+    o.id === req.params.orderId && o.portal_id === req.params.portalId
+  );
+  if (index === -1) return res.status(404).json({ message: 'Customer order not found' });
+  
+  data.customer_orders.splice(index, 1);
+  writeData(data);
+  res.json({ message: 'Customer order deleted' });
 });
 
 // Health check

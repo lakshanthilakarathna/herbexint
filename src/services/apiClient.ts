@@ -243,6 +243,35 @@ class APIClient {
       method: 'DELETE',
     });
   }
+
+  // Customer Order methods
+  async getCustomerOrders(portalId: string) {
+    return this.request(`/customer-portals/${portalId}/orders`);
+  }
+
+  async createCustomerOrder(portalId: string, order: any) {
+    return this.request(`/customer-portals/${portalId}/orders`, {
+      method: 'POST',
+      body: JSON.stringify(order),
+    });
+  }
+
+  async getCustomerOrder(portalId: string, orderId: string) {
+    return this.request(`/customer-portals/${portalId}/orders/${orderId}`);
+  }
+
+  async updateCustomerOrder(portalId: string, orderId: string, updates: any) {
+    return this.request(`/customer-portals/${portalId}/orders/${orderId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteCustomerOrder(portalId: string, orderId: string) {
+    return this.request(`/customer-portals/${portalId}/orders/${orderId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new APIClient();
