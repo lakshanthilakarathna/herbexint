@@ -113,7 +113,7 @@ class APIClient {
   }
 
   async getAllOrders() {
-    return this.request('/orders/all');
+    return this.request('/orders-complete');
   }
 
   async getOrder(id: string) {

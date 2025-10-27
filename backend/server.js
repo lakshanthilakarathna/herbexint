@@ -174,7 +174,7 @@ app.get('/api/orders', (req, res) => {
 });
 
 // Get all orders (including customer portal orders) for reports
-app.get('/api/orders/all', (req, res) => {
+app.get('/api/orders-complete', (req, res) => {
   const data = readData();
   const allOrders = [
     ...(data.orders || []),
