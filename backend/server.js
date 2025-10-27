@@ -173,6 +173,21 @@ app.get('/api/orders', (req, res) => {
   res.json(data.orders);
 });
 
+// Get all orders (including customer portal orders) for reports
+app.get('/api/orders/all', (req, res) => {
+  const data = readData();
+  const allOrders = [
+    ...(data.orders || []),
+    ...(data.customer_orders || []).map(co => ({
+      ...co,
+      source: 'customer-portal',
+      order_number: co.order_number || `CP-${co.id}`,
+      customer_id: co.portal_id
+    }))
+  ];
+  res.json(allOrders);
+});
+
 app.get('/api/orders/:id', (req, res) => {
   const data = readData();
   const order = data.orders.find(o => o.id === req.params.id);
@@ -714,21 +729,6 @@ app.delete('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
   
   writeData(data);
   res.json({ message: 'Customer order deleted' });
-});
-
-// Get all orders (including customer portal orders) for reports
-app.get('/api/orders/all', (req, res) => {
-  const data = readData();
-  const allOrders = [
-    ...(data.orders || []),
-    ...(data.customer_orders || []).map(co => ({
-      ...co,
-      source: 'customer-portal',
-      order_number: co.order_number || `CP-${co.id}`,
-      customer_id: co.portal_id
-    }))
-  ];
-  res.json(allOrders);
 });
 
 // Update order status specifically (with sync)
