@@ -403,7 +403,10 @@ app.get('/api/customer-portals', (req, res) => {
 
 app.get('/api/customer-portals/:id', (req, res) => {
   const data = readData();
-  const portal = data.customer_portals?.find(p => p.id === req.params.id);
+  // Search by both id and unique_url
+  const portal = data.customer_portals?.find(p => 
+    p.id === req.params.id || p.unique_url === req.params.id
+  );
   if (!portal) return res.status(404).json({ message: 'Customer portal not found' });
   res.json(portal);
 });
@@ -425,13 +428,16 @@ app.post('/api/customer-portals', (req, res) => {
 app.put('/api/customer-portals/:id', (req, res) => {
   const data = readData();
   if (!data.customer_portals) data.customer_portals = [];
-  const index = data.customer_portals.findIndex(p => p.id === req.params.id);
+  // Search by both id and unique_url
+  const index = data.customer_portals.findIndex(p => 
+    p.id === req.params.id || p.unique_url === req.params.id
+  );
   if (index === -1) return res.status(404).json({ message: 'Customer portal not found' });
   
   data.customer_portals[index] = {
     ...data.customer_portals[index],
     ...req.body,
-    id: req.params.id,
+    id: data.customer_portals[index].id, // Keep original ID
     updated_at: new Date().toISOString()
   };
   writeData(data);
@@ -441,7 +447,10 @@ app.put('/api/customer-portals/:id', (req, res) => {
 app.delete('/api/customer-portals/:id', (req, res) => {
   const data = readData();
   if (!data.customer_portals) data.customer_portals = [];
-  const index = data.customer_portals.findIndex(p => p.id === req.params.id);
+  // Search by both id and unique_url
+  const index = data.customer_portals.findIndex(p => 
+    p.id === req.params.id || p.unique_url === req.params.id
+  );
   if (index === -1) return res.status(404).json({ message: 'Customer portal not found' });
   
   data.customer_portals.splice(index, 1);
