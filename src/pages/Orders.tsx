@@ -1536,6 +1536,88 @@ const Orders: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Delivery Confirmation Section */}
+              {selectedOrder.delivery_confirmation && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <Label className="text-green-900 text-lg font-semibold">Delivery Confirmation</Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* Delivery Timestamp */}
+                    <div>
+                      <Label className="text-green-800 font-medium">Confirmed At</Label>
+                      <p className="text-sm text-green-700">
+                        {new Date(selectedOrder.delivery_confirmation.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* Delivery Location */}
+                    {selectedOrder.delivery_confirmation.location && (
+                      <div>
+                        <Label className="text-green-800 font-medium">Delivery Location</Label>
+                        <div className="flex items-start gap-2 mt-1">
+                          <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
+                          <div>
+                            <p className="text-sm text-green-700">{selectedOrder.delivery_confirmation.location.address}</p>
+                            <p className="text-xs text-green-600">
+                              📍 {selectedOrder.delivery_confirmation.location.latitude.toFixed(6)}, {selectedOrder.delivery_confirmation.location.longitude.toFixed(6)}
+                            </p>
+                            <a
+                              href={`https://www.google.com/maps?q=${selectedOrder.delivery_confirmation.location.latitude},${selectedOrder.delivery_confirmation.location.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-green-600 hover:underline"
+                            >
+                              View on Google Maps →
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Delivery Photo */}
+                    {selectedOrder.delivery_confirmation.photo && (
+                      <div>
+                        <Label className="text-green-800 font-medium">Delivery Photo</Label>
+                        <div className="mt-2">
+                          <img 
+                            src={selectedOrder.delivery_confirmation.photo} 
+                            alt="Delivery confirmation" 
+                            className="max-w-full h-auto max-h-64 rounded-lg border border-green-300"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Customer Signature */}
+                    {selectedOrder.delivery_confirmation.signature && (
+                      <div>
+                        <Label className="text-green-800 font-medium">Customer Signature</Label>
+                        <div className="mt-2">
+                          <img 
+                            src={selectedOrder.delivery_confirmation.signature} 
+                            alt="Customer signature" 
+                            className="max-w-full h-auto max-h-32 rounded border border-green-300 bg-white"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Delivery Notes */}
+                    {selectedOrder.delivery_confirmation.delivery_notes && (
+                      <div>
+                        <Label className="text-green-800 font-medium">Delivery Notes</Label>
+                        <p className="text-sm text-green-700 mt-1 p-2 bg-white rounded border border-green-300">
+                          {selectedOrder.delivery_confirmation.delivery_notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
