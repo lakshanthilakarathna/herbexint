@@ -173,6 +173,11 @@ app.get('/api/orders', (req, res) => {
   res.json(data.orders);
 });
 
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Backend is running', timestamp: new Date().toISOString() });
+});
+
 // Get all orders (including customer portal orders) for reports
 app.get('/api/orders-complete', (req, res) => {
   const data = readData();
