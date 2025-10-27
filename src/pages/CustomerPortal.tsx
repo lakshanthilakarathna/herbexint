@@ -157,7 +157,7 @@ const CustomerPortal: React.FC = () => {
         id: p.id,
         name: `${p.brand_name || ''} - ${p.product_name || ''}`,
         description: p.description || '',
-        price: p.retail_price || 0,
+        price: p.wholesale_price || 0,
         stock_quantity: p.stock_quantity || 0,
         brand_name: p.brand_name || '',
         product_name: p.product_name || '',
