@@ -23,6 +23,7 @@ export interface AuthContextType {
   login: (emailOrUsername: string, password: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  validateUserSession: () => Promise<boolean>;
   isLoading: boolean;
   hasPermission: (permission: string) => boolean;
   hasRole: (roles: string[]) => boolean;
@@ -49,6 +50,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('accessToken'));
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+  };
+
+  const validateUserSession = async () => {
+    if (!user || !token) return;
+    
+    try {
+      const allUsers = await apiClient.getUsers();
+      const dbUser = allUsers.find((u: any) => u.id === user.id);
+      
+      if (!dbUser || dbUser.status === 'deleted' || dbUser.status === 'inactive') {
+        console.log('User session invalidated - user deleted or deactivated');
+        logout();
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error validating user session:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('accessToken');
@@ -57,14 +85,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (storedToken && storedUser) {
         try {
           const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setToken(storedToken);
+          
+          // Verify user still exists and is active in database
+          const allUsers = await apiClient.getUsers();
+          const dbUser = allUsers.find((u: any) => u.id === userData.id);
+          
+          if (!dbUser || dbUser.status === 'deleted' || dbUser.status === 'inactive') {
+            // User has been deleted or deactivated, clear session
+            console.log('User no longer exists or is inactive, clearing session');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            setToken(null);
+            setUser(null);
+          } else {
+            // User is still active, restore session
+            setUser(userData);
+            setToken(storedToken);
+          }
         } catch (error) {
           console.error('Auth initialization error:', error);
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
           setToken(null);
+          setUser(null);
         }
       }
       setIsLoading(false);
@@ -72,6 +117,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initAuth();
   }, []);
+
+  useEffect(() => {
+    // Set up periodic session validation (every 5 minutes)
+    const sessionCheckInterval = setInterval(async () => {
+      if (user && token) {
+        await validateUserSession();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => {
+      clearInterval(sessionCheckInterval);
+    };
+  }, [user, token]);
 
   const login = async (emailOrUsername: string, password: string) => {
     try {
@@ -82,7 +140,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       );
       
       if (!dbUser) {
-        throw new Error('User not found');
+        throw new Error('User not found or has been deleted');
+      }
+      
+      // Check if user is active (not deleted)
+      if (dbUser.status === 'deleted' || dbUser.status === 'inactive') {
+        throw new Error('User account has been deactivated');
       }
       
       // Verify password
@@ -118,14 +181,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-  };
-
   const refreshToken = async () => {
     // Mock: just return current token
     return Promise.resolve();
@@ -153,6 +208,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         logout,
         refreshToken,
+        validateUserSession,
         isLoading,
         hasPermission,
         hasRole,
