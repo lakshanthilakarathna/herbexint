@@ -545,7 +545,7 @@ const Visits: React.FC = () => {
                         <Eye className="w-4 h-4 mr-1" />
                         View
                       </Button>
-                      {hasPermission('visits:write') && visit.sales_rep_id === user?.id && (
+                      {(hasPermission('visits:write') && visit.sales_rep_id === user?.id) || (hasPermission('visits:write') && user?.role_id === 'admin-role-id') && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -556,7 +556,7 @@ const Visits: React.FC = () => {
                           Edit
                         </Button>
                       )}
-                      {!visit.check_out_time && visit.sales_rep_id === user?.id && (
+                      {(!visit.check_out_time && visit.sales_rep_id === user?.id) || (!visit.check_out_time && user?.role_id === 'admin-role-id') && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -629,7 +629,7 @@ const Visits: React.FC = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        {hasPermission('visits:write') && visit.sales_rep_id === user?.id && (
+                        {(hasPermission('visits:write') && visit.sales_rep_id === user?.id) || (hasPermission('visits:write') && user?.role_id === 'admin-role-id') && (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -639,7 +639,7 @@ const Visits: React.FC = () => {
                             <Edit className="w-4 h-4" />
                           </Button>
                         )}
-                        {!visit.check_out_time && visit.sales_rep_id === user?.id && (
+                        {(!visit.check_out_time && visit.sales_rep_id === user?.id) || (!visit.check_out_time && user?.role_id === 'admin-role-id') && (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -649,7 +649,7 @@ const Visits: React.FC = () => {
                             <CheckCircle className="w-4 h-4" />
                           </Button>
                         )}
-                        {hasPermission('visits:delete') && visit.sales_rep_id === user?.id && (
+                        {(hasPermission('visits:delete') && visit.sales_rep_id === user?.id) || (hasPermission('visits:delete') && user?.role_id === 'admin-role-id') && (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -788,7 +788,7 @@ const Visits: React.FC = () => {
                 <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
                   Close
                 </Button>
-                {hasPermission('visits:write') && selectedVisit.sales_rep_id === user?.id && (
+                {(hasPermission('visits:write') && selectedVisit.sales_rep_id === user?.id) || (hasPermission('visits:write') && user?.role_id === 'admin-role-id') && (
                   <Button onClick={() => {
                     setIsViewDialogOpen(false);
                     handleEditVisit(selectedVisit);
