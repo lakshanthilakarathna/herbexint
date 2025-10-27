@@ -580,7 +580,12 @@ const Customers: React.FC = () => {
                       </div>
                       <div className="flex items-center text-gray-600">
                         <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-                        <span>{customer.address.city}, {customer.address.state}</span>
+                        <div>
+                          <div className="text-sm">{customer.address.street}</div>
+                          <div className="text-xs text-gray-500">
+                            {customer.address.city}, {customer.address.state} {customer.address.zipCode}
+                          </div>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t">
                         <span className="text-gray-500">Credit Limit:</span>
@@ -658,9 +663,16 @@ const Customers: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center text-sm">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {customer.address.city}, {customer.address.state}
+                    <div className="space-y-1">
+                      <div className="flex items-center text-sm">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        <span className="truncate max-w-[200px]" title={customer.address.street}>
+                          {customer.address.street}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {customer.address.city}, {customer.address.state} {customer.address.zipCode}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(customer.status)}</TableCell>
@@ -895,6 +907,82 @@ const Customers: React.FC = () => {
                   id="edit_contact_title"
                   value={editCustomer.contact_title || ''}
                   onChange={(e) => setEditCustomer({...editCustomer, contact_title: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit_street">Address</Label>
+              <Input
+                id="edit_street"
+                value={editCustomer.address?.street || ''}
+                onChange={(e) => setEditCustomer({
+                  ...editCustomer, 
+                  address: {
+                    street: e.target.value,
+                    city: editCustomer.address?.city || '',
+                    state: editCustomer.address?.state || '',
+                    zipCode: editCustomer.address?.zipCode || '',
+                    country: editCustomer.address?.country || 'USA'
+                  }
+                })}
+                placeholder="Street address"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit_city">City</Label>
+                <Input
+                  id="edit_city"
+                  value={editCustomer.address?.city || ''}
+                  onChange={(e) => setEditCustomer({
+                    ...editCustomer, 
+                    address: {
+                      street: editCustomer.address?.street || '',
+                      city: e.target.value,
+                      state: editCustomer.address?.state || '',
+                      zipCode: editCustomer.address?.zipCode || '',
+                      country: editCustomer.address?.country || 'USA'
+                    }
+                  })}
+                  placeholder="City"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_state">State</Label>
+                <Input
+                  id="edit_state"
+                  value={editCustomer.address?.state || ''}
+                  onChange={(e) => setEditCustomer({
+                    ...editCustomer, 
+                    address: {
+                      street: editCustomer.address?.street || '',
+                      city: editCustomer.address?.city || '',
+                      state: e.target.value,
+                      zipCode: editCustomer.address?.zipCode || '',
+                      country: editCustomer.address?.country || 'USA'
+                    }
+                  })}
+                  placeholder="State"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_zipCode">ZIP Code</Label>
+                <Input
+                  id="edit_zipCode"
+                  value={editCustomer.address?.zipCode || ''}
+                  onChange={(e) => setEditCustomer({
+                    ...editCustomer, 
+                    address: {
+                      street: editCustomer.address?.street || '',
+                      city: editCustomer.address?.city || '',
+                      state: editCustomer.address?.state || '',
+                      zipCode: e.target.value,
+                      country: editCustomer.address?.country || 'USA'
+                    }
+                  })}
+                  placeholder="ZIP Code"
                 />
               </div>
             </div>
