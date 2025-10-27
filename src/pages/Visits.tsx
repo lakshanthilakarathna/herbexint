@@ -64,9 +64,9 @@ const Visits: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<string>('30'); // days
   const [purposeFilter, setPurposeFilter] = useState<string>('all');
   const [outcomeFilter, setOutcomeFilter] = useState<string>('all');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [visitToConfirm, setVisitToConfirm] = useState<Visit | null>(null);
+  const [confirmOutcome, setConfirmOutcome] = useState<'successful' | 'needs_follow_up' | 'no_contact' | 'other'>('successful');
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [newVisit, setNewVisit] = useState<Partial<Visit>>({
     customer_id: '',
@@ -304,6 +304,64 @@ const Visits: React.FC = () => {
     } catch (error) {
       toast.error('Failed to check out');
       console.error('Error checking out:', error);
+    }
+  };
+
+  const handleConfirmVisit = (visit: Visit) => {
+    setVisitToConfirm(visit);
+    setConfirmOutcome(visit.outcome || 'successful');
+    setIsConfirmDialogOpen(true);
+  };
+
+  const handleConfirmVisitWithOutcome = async () => {
+    if (!visitToConfirm) return;
+
+    try {
+      // Capture location during visit confirmation
+      let locationData = undefined;
+      console.log('🌍 Capturing location for visit confirmation...');
+      
+      try {
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          toast.success(`Location captured: ${location.address}`, { duration: 3000 });
+          console.log('✅ Visit confirmation location captured:', locationData);
+        }
+      } catch (locationError) {
+        console.log('ℹ️ Location capture failed during visit confirmation:', locationError);
+        toast.info('Visit confirmed without location', { duration: 2000 });
+      }
+
+      const updateData: any = {
+        check_out_time: new Date().toISOString(),
+        outcome: confirmOutcome,
+        updated_at: new Date().toISOString()
+      };
+
+      // Add location data if captured
+      if (locationData) {
+        updateData.location = locationData;
+      }
+
+      const updated = await apiClient.updateVisit(visitToConfirm.id, updateData);
+      
+      const updatedVisits = visits.map(v => 
+        v.id === visitToConfirm.id ? updated : v
+      );
+      setVisits(updatedVisits);
+      
+      setIsConfirmDialogOpen(false);
+      setVisitToConfirm(null);
+      toast.success('Visit confirmed successfully!');
+    } catch (error) {
+      toast.error('Failed to confirm visit');
+      console.error('Error confirming visit:', error);
     }
   };
 
@@ -643,7 +701,7 @@ const Visits: React.FC = () => {
                           variant="outline" 
                           size="sm"
                           className="flex-1"
-                          onClick={() => handleCheckOut(visit.id)}
+                          onClick={() => handleConfirmVisit(visit)}
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
                           Confirm Visit
@@ -725,7 +783,7 @@ const Visits: React.FC = () => {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => handleCheckOut(visit.id)}
+                            onClick={() => handleConfirmVisit(visit)}
                             title="Confirm Visit"
                           >
                             <CheckCircle className="w-4 h-4" />
@@ -948,6 +1006,70 @@ const Visits: React.FC = () => {
                 Save Changes
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Visit Dialog */}
+      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Visit</DialogTitle>
+            <DialogDescription>
+              Select the outcome and confirm your visit with location capture
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {visitToConfirm && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">Visit Details</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p><strong>Customer:</strong> {visitToConfirm.customer_name}</p>
+                  <p><strong>Purpose:</strong> {visitToConfirm.purpose}</p>
+                  <p><strong>Check In:</strong> {new Date(visitToConfirm.check_in_time).toLocaleString()}</p>
+                </div>
+              </div>
+            )}
+            
+            <div>
+              <Label htmlFor="confirm_outcome">Visit Outcome <span className="text-red-500">*</span></Label>
+              <Select value={confirmOutcome} onValueChange={(value: any) => setConfirmOutcome(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select outcome" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="successful">✅ Successful</SelectItem>
+                  <SelectItem value="needs_follow_up">🔄 Needs Follow-up</SelectItem>
+                  <SelectItem value="no_contact">❌ No Contact</SelectItem>
+                  <SelectItem value="other">📝 Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium">Location Capture</p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Your current location will be automatically captured when you confirm this visit.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => {
+              setIsConfirmDialogOpen(false);
+              setVisitToConfirm(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmVisitWithOutcome}>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Confirm Visit
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
