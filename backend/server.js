@@ -828,3 +828,4 @@ app.listen(PORT, () => {
   console.log(`🚀 HERB Backend API running on port ${PORT}`);
   console.log(`📁 Data file: ${dataFile}`);
 });
+# Backend restart trigger
