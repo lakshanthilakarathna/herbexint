@@ -12,7 +12,15 @@ class APIClient {
     const cacheBuster = url.includes('?') ? `&_t=${timestamp}` : `?_t=${timestamp}`;
     const getUrl = options.method === 'GET' ? `${url}${cacheBuster}` : url;
     
-    const response = await fetch(`${API_BASE_URL}${getUrl}`, {
+    const fullUrl = `${API_BASE_URL}${getUrl}`;
+    console.log('🌐 API Request:', {
+      method: options.method || 'GET',
+      url: fullUrl,
+      baseUrl: API_BASE_URL,
+      originalUrl: url
+    });
+    
+    const response = await fetch(fullUrl, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -23,12 +31,22 @@ class APIClient {
       },
     });
 
+    console.log('📡 API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      url: response.url
+    });
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Request failed' }));
+      console.error('❌ API Error:', error);
       throw new Error(error.message || 'Request failed');
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('✅ API Success:', data);
+    return data;
   }
 
   // Products

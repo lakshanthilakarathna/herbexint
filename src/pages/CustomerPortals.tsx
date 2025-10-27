@@ -52,12 +52,21 @@ const CustomerPortals: React.FC = () => {
   const fetchPortals = async () => {
     try {
       setLoading(true);
+      console.log('🌐 Fetching customer portals from API...');
+      console.log('🔗 API Base URL:', window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api');
+      
       // Load from API only (no localStorage)
       const data = await apiClient.getCustomerPortals();
+      console.log('✅ Customer portals data received:', data);
       setPortals(Array.isArray(data) ? data : []);
-      console.log('Loaded customer portals from database:', data?.length || 0);
+      console.log('📊 Loaded customer portals from database:', data?.length || 0);
     } catch (error) {
-      console.error('Error fetching customer portals:', error);
+      console.error('❌ Error fetching customer portals:', error);
+      console.error('🔍 Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       toast.error('Failed to load customer portals');
       setPortals([]);
     } finally {
