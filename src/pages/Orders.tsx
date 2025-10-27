@@ -1138,18 +1138,18 @@ const Orders: React.FC = () => {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-600">Unit Price:</span>
-                              <span className="font-medium">Rs. {item.unit_price.toFixed(2)}</span>
+                              <span className="font-medium">Rs. {(item.unit_price || 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between border-t pt-2">
                               <span className="text-gray-600 font-medium">Total:</span>
-                              <span className="font-bold text-blue-600">Rs. {item.total_price.toFixed(2)}</span>
+                              <span className="font-bold text-blue-600">Rs. {(item.total_price || 0).toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
                       ))}
                       <div className="border-t-2 pt-3 flex justify-between items-center">
                         <span className="font-semibold text-lg">Order Total:</span>
-                        <span className="font-bold text-lg text-green-600">Rs. {calculateTotal().toFixed(2)}</span>
+                        <span className="font-bold text-lg text-green-600">Rs. {(calculateTotal() || 0).toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -1198,8 +1198,8 @@ const Orders: React.FC = () => {
                                   </Button>
                                 </div>
                               </TableCell>
-                              <TableCell>Rs. {item.unit_price.toFixed(2)}</TableCell>
-                              <TableCell>Rs. {item.total_price.toFixed(2)}</TableCell>
+                              <TableCell>Rs. {(item.unit_price || 0).toFixed(2)}</TableCell>
+                              <TableCell>Rs. {(item.total_price || 0).toFixed(2)}</TableCell>
                               <TableCell>
                                 <Button
                                   variant="ghost"
@@ -1213,7 +1213,7 @@ const Orders: React.FC = () => {
                           ))}
                           <TableRow>
                             <TableCell colSpan={3} className="text-right font-semibold">Total:</TableCell>
-                            <TableCell className="font-bold">Rs. {calculateTotal().toFixed(2)}</TableCell>
+                            <TableCell className="font-bold">Rs. {(calculateTotal() || 0).toFixed(2)}</TableCell>
                             <TableCell></TableCell>
                           </TableRow>
                         </TableBody>
@@ -1697,7 +1697,7 @@ const Orders: React.FC = () => {
                       <div key={item.id} className="flex items-center justify-between p-2 border rounded bg-gray-50">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.product_name}</p>
-                          <p className="text-xs text-gray-500">Rs. {item.unit_price.toFixed(2)} each</p>
+                          <p className="text-xs text-gray-500">Rs. {(item.unit_price || 0).toFixed(2)} each</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
@@ -1745,7 +1745,7 @@ const Orders: React.FC = () => {
                           >
                             +
                           </Button>
-                          <span className="font-medium text-sm ml-2">Rs. {item.total_price.toFixed(2)}</span>
+                          <span className="font-medium text-sm ml-2">Rs. {(item.total_price || 0).toFixed(2)}</span>
                           <Button
                             type="button"
                             variant="ghost"

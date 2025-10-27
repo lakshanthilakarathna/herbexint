@@ -248,11 +248,11 @@ const ProductCatalog: React.FC = () => {
                 <div className="space-y-2 mb-3">
                   <div className="flex justify-between items-center bg-blue-50 p-2 rounded">
                     <span className="text-xs font-medium text-blue-900">Wholesale Price</span>
-                    <span className="text-lg font-bold text-blue-900">Rs. {product.wholesale_price.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-blue-900">Rs. {(product.wholesale_price || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center bg-green-50 p-2 rounded">
                     <span className="text-xs font-medium text-green-900">Retail Price</span>
-                    <span className="text-lg font-bold text-green-900">Rs. {product.retail_price.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-green-900">Rs. {(product.retail_price || 0).toFixed(2)}</span>
                   </div>
                 </div>
 

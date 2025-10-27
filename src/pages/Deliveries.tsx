@@ -200,7 +200,7 @@ const Deliveries: React.FC = () => {
                     <TableRow key={order.id}>
                       <TableCell className="font-medium font-mono">{order.order_number}</TableCell>
                       <TableCell>{order.customer_name}</TableCell>
-                      <TableCell>Rs. {order.total_amount.toFixed(2)}</TableCell>
+                      <TableCell>Rs. {(order.total_amount || 0).toFixed(2)}</TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>{new Date(order.order_date).toLocaleDateString()}</TableCell>
                       <TableCell>
@@ -259,7 +259,7 @@ const Deliveries: React.FC = () => {
                   {selectedOrder.items.map((item: any, idx: number) => (
                     <div key={idx} className="flex justify-between p-2 border rounded">
                       <span>{item.product_name}</span>
-                      <span>Qty: {item.quantity} × Rs. {item.unit_price.toFixed(2)}</span>
+                      <span>Qty: {item.quantity} × Rs. {(item.unit_price || 0).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -267,7 +267,7 @@ const Deliveries: React.FC = () => {
 
               <div className="flex justify-between font-semibold text-lg pt-4 border-t">
                 <span>Total:</span>
-                <span>Rs. {selectedOrder.total_amount.toFixed(2)}</span>
+                <span>Rs. {(selectedOrder.total_amount || 0).toFixed(2)}</span>
               </div>
 
               {selectedOrder.delivery_confirmation && (
