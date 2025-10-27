@@ -64,8 +64,36 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
     }
   };
 
+  // Compress image function
+  const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataUrl);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // Capture Photo
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -74,12 +102,15 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPhoto(e.target?.result as string);
-      toast.success('Photo captured!');
-    };
-    reader.readAsDataURL(file);
+    try {
+      toast.info('Compressing photo...', { duration: 2000 });
+      const compressedPhoto = await compressImage(file, 800, 0.6); // Max 800px width, 60% quality
+      setPhoto(compressedPhoto);
+      toast.success('Photo captured and compressed!');
+    } catch (error) {
+      console.error('Photo compression error:', error);
+      toast.error('Failed to process photo');
+    }
   };
 
   // Signature Pad Drawing
@@ -136,11 +167,12 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      // Capture signature from canvas (optional)
+      // Capture signature from canvas (optional) - compress it
       const canvas = canvasRef.current;
       let signatureData = null;
       if (canvas && hasSignature) {
-        signatureData = canvas.toDataURL('image/png');
+        // Compress signature to reduce payload size
+        signatureData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG with 80% quality
       }
 
       await onConfirm({
@@ -267,8 +299,8 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
             <div className="border rounded-lg bg-white">
               <canvas
                 ref={canvasRef}
-                width={600}
-                height={150}
+                width={400}
+                height={100}
                 className="w-full border-b cursor-crosshair"
                 onMouseDown={handleCanvasMouseDown}
                 onMouseMove={handleCanvasMouseMove}
