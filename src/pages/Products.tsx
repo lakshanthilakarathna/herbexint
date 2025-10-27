@@ -30,7 +30,6 @@ interface Product {
   pack_size: number;
   image_url?: string;
   wholesale_price: number;
-  cost_price: number;
   retail_price: number;
   bonus?: string;
   stock_quantity: number;
@@ -74,7 +73,6 @@ const Products: React.FC = () => {
     pack_size: 0,
     image_url: '',
     wholesale_price: 0,
-    cost_price: 0,
     retail_price: 0,
     bonus: '',
     stock_quantity: 0,
@@ -242,12 +240,7 @@ const Products: React.FC = () => {
         toast.error('Please enter a valid wholesale price');
         return;
       }
-      
-      if (!newProduct.cost_price || newProduct.cost_price <= 0) {
-        toast.error('Please enter a valid cost price');
-        return;
-      }
-      
+
       if (!newProduct.retail_price || newProduct.retail_price <= 0) {
         toast.error('Please enter a valid retail price');
         return;
@@ -265,7 +258,6 @@ const Products: React.FC = () => {
         pack_size: Number(newProduct.pack_size),
         image_url: imagePreview || newProduct.image_url || '',
         wholesale_price: Number(newProduct.wholesale_price),
-        cost_price: Number(newProduct.cost_price),
         retail_price: Number(newProduct.retail_price),
         bonus: newProduct.bonus?.trim() || '',
         stock_quantity: Number(newProduct.stock_quantity) || 0,
@@ -451,13 +443,12 @@ const Products: React.FC = () => {
         product.product_name,
         product.pack_size.toString(),
         `Rs. ${(product.wholesale_price || 0).toFixed(2)}`,
-        `Rs. ${(product.cost_price || 0).toFixed(2)}`,
         `Rs. ${(product.retail_price || 0).toFixed(2)}`,
         product.stock_quantity.toString()
       ]);
 
       autoTable(doc, {
-        head: [['Brand', 'Product', 'Pack', 'Wholesale', 'Cost', 'Retail', 'Stock']],
+        head: [['Brand', 'Product', 'Pack', 'Wholesale', 'Retail', 'Stock']],
         body: tableData,
         startY: 35,
         styles: { fontSize: 8 },
@@ -474,7 +465,7 @@ const Products: React.FC = () => {
   };
 
   const handleDownloadTemplate = () => {
-    const template = `Product Name,Pack Size,Wholesale Price,Cost Price,Retail Price,Bonus,Description,Stock,Company Name
+    const template = `Product Name,Pack Size,Wholesale Price,Retail Price,Bonus,Description,Stock,Company Name
 Premium Arrack 750ml,12,1200,800,1500,1+1 on bulk orders,Premium toddy liquor,500,HerbDistillery
 Local Beer 330ml,24,180,120,220,Free shipping on 50+,Local brewery beer,750,HerbBrewery
 Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
@@ -528,22 +519,21 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
             return;
           }
 
-          // Parse CSV format: Brand Name, Product Name, Pack Size, Wholesale Price, Cost Price, Retail Price, Bonus
+          // Parse CSV format: Brand Name, Product Name, Pack Size, Wholesale Price, Retail Price, Bonus
           const parts = line.split(',').map(p => p.trim());
           
           if (parts.length >= 6) {
             const product = {
               brand_name: '', // Optional, not in CSV
               product_name: parts[0] || '',
-              description: parts[6] || '',
+              description: parts[5] || '',
               category: 'liquor',
               pack_size: parseInt(parts[1]) || 0,
               image_url: '',
               wholesale_price: parseFloat(parts[2]) || 0,
-              cost_price: parseFloat(parts[3]) || 0,
-              retail_price: parseFloat(parts[4]) || 0,
-              bonus: parts[5] || '',
-              stock_quantity: parseInt(parts[7]) || 0,
+              retail_price: parseFloat(parts[3]) || 0,
+              bonus: parts[4] || '',
+              stock_quantity: parseInt(parts[6]) || 0,
               min_stock_level: 10,
               max_stock_level: 1000,
               unit: 'pieces',
@@ -1082,17 +1072,6 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                     />
                   </div>
                   <div>
-                    <Label htmlFor="cost_price">Cost Price (LKR) *</Label>
-                    <Input
-                      id="cost_price"
-                      type="number"
-                      step="0.01"
-                      value={newProduct.cost_price || ''}
-                      onChange={(e) => setNewProduct({...newProduct, cost_price: Number(e.target.value)})}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
                     <Label htmlFor="retail_price">Retail Price (LKR) *</Label>
                     <Input
                       id="retail_price"
@@ -1401,9 +1380,6 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                         <span className="text-gray-500">Wholesale:</span> <span className="font-medium">Rs. {(product.wholesale_price || 0).toFixed(2)}</span>
                       </div>
                       <div className="text-sm">
-                        <span className="text-gray-500">Cost:</span> Rs. {(product.cost_price || 0).toFixed(2)}
-                      </div>
-                      <div className="text-sm">
                         <span className="text-gray-500">Retail:</span> Rs. {(product.retail_price || 0).toFixed(2)}
                       </div>
                     </div>
@@ -1529,22 +1505,9 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                       <span className="text-sm font-medium text-blue-900">Wholesale Price</span>
                       <span className="text-lg font-bold text-blue-900">Rs. {(selectedProduct.wholesale_price || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Cost Price</span>
-                      <span className="text-lg font-bold text-gray-900">Rs. {(selectedProduct.cost_price || 0).toFixed(2)}</span>
-                    </div>
                     <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                       <span className="text-sm font-medium text-green-900">Retail Price</span>
                       <span className="text-lg font-bold text-green-900">Rs. {(selectedProduct.retail_price || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="p-3 bg-purple-50 rounded-lg">
-                      <label className="text-xs text-purple-700 font-medium">Profit Margin</label>
-                      <p className="text-sm font-bold text-purple-900">
-                        Rs. {((selectedProduct.retail_price || 0) - (selectedProduct.cost_price || 0)).toFixed(2)} 
-                        <span className="text-xs ml-1">
-                          ({(((selectedProduct.retail_price || 0) - (selectedProduct.cost_price || 0)) / (selectedProduct.cost_price || 1) * 100).toFixed(1)}%)
-                        </span>
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -1780,17 +1743,6 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                   step="0.01"
                   value={editProduct.wholesale_price || ''}
                   onChange={(e) => setEditProduct({...editProduct, wholesale_price: Number(e.target.value)})}
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_cost_price">Cost Price (LKR) *</Label>
-                <Input
-                  id="edit_cost_price"
-                  type="number"
-                  step="0.01"
-                  value={editProduct.cost_price || ''}
-                  onChange={(e) => setEditProduct({...editProduct, cost_price: Number(e.target.value)})}
                   placeholder="0.00"
                 />
               </div>

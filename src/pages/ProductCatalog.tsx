@@ -15,7 +15,6 @@ interface Product {
   pack_size: number;
   image_url?: string;
   wholesale_price: number;
-  cost_price: number;
   retail_price: number;
   bonus?: string;
   stock_quantity: number;

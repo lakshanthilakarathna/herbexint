@@ -75,7 +75,6 @@ interface Product {
   category?: string;
   image_url?: string;
   wholesale_price?: number;
-  cost_price?: number;
   retail_price?: number;
   bonus?: string;
   unit?: string;
@@ -186,7 +185,7 @@ const Orders: React.FC = () => {
                     category: p.category || 'liquor',
         image_url: p.image_url || '',
         wholesale_price: p.wholesale_price || 0,
-        cost_price: p.cost_price || 0,
+        cost_price: p.wholesale_price || 0,
         retail_price: p.retail_price || 0,
         bonus: p.bonus || '',
         unit: p.unit || 'pieces',
