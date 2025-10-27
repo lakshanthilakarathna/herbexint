@@ -113,8 +113,8 @@ export const CustomerAnalytics: React.FC<CustomerAnalyticsProps> = ({ orders, cu
             {topCustomers.length > 0 ? (
               <div className="space-y-4">
                 {topCustomers.map((customer: any, index: number) => {
-                  const safePercentage = totalRevenue > 0 ? (customer.totalRevenue / totalRevenue) * 100 : 0;
-                  const safePercentage = typeof safePercentage === 'number' && !isNaN(safePercentage) ? safePercentage : 0;
+                  const percentage = totalRevenue > 0 ? (customer.totalRevenue / totalRevenue) * 100 : 0;
+                  const safePercentage = typeof percentage === 'number' && !isNaN(percentage) ? percentage : 0;
                   return (
                     <div key={customer.customerId} className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -162,8 +162,8 @@ export const CustomerAnalytics: React.FC<CustomerAnalyticsProps> = ({ orders, cu
             {typeData.length > 0 ? (
               <div className="space-y-4">
                 {typeData.map((item) => {
-                  const safePercentage = totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0;
-                  const safePercentage = typeof safePercentage === 'number' && !isNaN(safePercentage) ? safePercentage : 0;
+                  const percentage = totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0;
+                  const safePercentage = typeof percentage === 'number' && !isNaN(percentage) ? percentage : 0;
                   return (
                     <div key={item.type} className="space-y-2">
                       <div className="flex items-center justify-between">
