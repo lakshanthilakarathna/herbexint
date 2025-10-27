@@ -451,7 +451,7 @@ app.delete('/api/customer-portals/:id', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'HERB Backend API is running' });
+  res.json({ status: 'ok', message: 'HERB Backend API is running - Customer Portal endpoints available' });
 });
 
 // Start server
