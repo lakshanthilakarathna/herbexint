@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { generateCustomerPortalOrderNumber } from '@/lib/orderNumberGenerator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -279,7 +280,7 @@ const CustomerPortal: React.FC = () => {
         return;
       }
 
-      const orderNumber = `ORD-${String(Date.now()).slice(-8)}`;
+      const orderNumber = generateCustomerPortalOrderNumber();
       
       const newOrder: CustomerOrder = {
         id: String(Date.now()),

@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { generateAdminOrderNumber, generateSalesRepOrderNumber, generateCustomerPortalOrderNumber } = require('./orderNumberGenerator');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -202,9 +203,22 @@ app.get('/api/orders/:id', (req, res) => {
 
 app.post('/api/orders', (req, res) => {
   const data = readData();
+  
+  // Generate order number based on created_by field
+  let orderNumber;
+  if (req.body.created_by === 'admin-user-id') {
+    orderNumber = generateAdminOrderNumber();
+  } else if (req.body.created_by && req.body.created_by.startsWith('sales-rep')) {
+    orderNumber = generateSalesRepOrderNumber(req.body.created_by);
+  } else {
+    // Fallback for unknown users
+    orderNumber = generateAdminOrderNumber();
+  }
+  
   const order = {
     ...req.body,
     id: req.body.id || generateId(),
+    order_number: orderNumber, // Use generated order number
     created_at: req.body.created_at || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -512,6 +526,7 @@ app.post('/api/customer-portals/:portalId/orders', (req, res) => {
     ...req.body,
     id: req.body.id || generateId(),
     portal_id: req.params.portalId,
+    order_number: generateCustomerPortalOrderNumber(), // Generate unique order number
     status: req.body.status || 'pending', // Default status
     created_at: req.body.created_at || new Date().toISOString(),
     updated_at: new Date().toISOString()

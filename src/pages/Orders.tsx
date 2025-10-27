@@ -11,8 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
-import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star, MapPin } from 'lucide-react';
-import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
+import { generateAdminOrderNumber, generateSalesRepOrderNumber } from '@/lib/orderNumberGenerator';
 
 interface Order {
   id: string;
@@ -512,8 +511,13 @@ const Orders: React.FC = () => {
       }
 
 
-      // Mock order creation
-      const orderNumber = `ORD-${String(orders.length + 1).padStart(3, '0')}`;
+      // Generate unique order number based on user role
+      let orderNumber: string;
+      if (user?.role_id === 'admin-role-id') {
+        orderNumber = generateAdminOrderNumber();
+      } else {
+        orderNumber = generateSalesRepOrderNumber(user?.id || 'unknown');
+      }
       const total = newOrder.items.reduce((sum, item) => sum + item.total_price, 0);
       
       const newOrderData: Order = {
