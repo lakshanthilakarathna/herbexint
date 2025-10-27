@@ -67,6 +67,9 @@ const Visits: React.FC = () => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [visitToConfirm, setVisitToConfirm] = useState<Visit | null>(null);
   const [confirmOutcome, setConfirmOutcome] = useState<'successful' | 'needs_follow_up' | 'no_contact' | 'other'>('successful');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [newVisit, setNewVisit] = useState<Partial<Visit>>({
     customer_id: '',
