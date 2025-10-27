@@ -52,7 +52,7 @@ interface CustomerOrder {
   customer_phone: string;
   delivery_address: string;
   total_amount: number;
-  status: 'pending' | 'approved' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
   order_date: string;
   delivery_date?: string;
   items: OrderItem[];
@@ -391,7 +391,6 @@ const CustomerPortal: React.FC = () => {
   const getStatusBadge = (status: CustomerOrder['status']) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
-      approved: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle, label: 'Approved' },
       shipped: { color: 'bg-purple-100 text-purple-800', icon: Truck, label: 'Shipped' },
       delivered: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Delivered' },
       cancelled: { color: 'bg-red-100 text-red-800', icon: Trash2, label: 'Cancelled' }
