@@ -659,6 +659,8 @@ app.patch('/api/orders/:id/status', (req, res) => {
   const newStatus = req.body.status;
   if (!newStatus) return res.status(400).json({ message: 'Status is required' });
   
+  console.log(`🔄 Updating order ${req.params.id} status: ${data.orders[index].status} → ${newStatus}`);
+  
   // Update main order
   data.orders[index] = {
     ...data.orders[index],
@@ -669,11 +671,15 @@ app.patch('/api/orders/:id/status', (req, res) => {
   // Sync with customer portal orders if this is a customer portal order
   const customerOrderIndex = data.customer_orders.findIndex(co => co.id === req.params.id);
   if (customerOrderIndex !== -1) {
+    console.log(`🔄 Syncing with customer portal order ${req.params.id}`);
     data.customer_orders[customerOrderIndex] = {
       ...data.customer_orders[customerOrderIndex],
       status: newStatus,
       updated_at: new Date().toISOString()
     };
+    console.log(`✅ Customer portal order synced: ${newStatus}`);
+  } else {
+    console.log(`ℹ️ Order ${req.params.id} not found in customer_orders (not a customer portal order)`);
   }
   
   writeData(data);

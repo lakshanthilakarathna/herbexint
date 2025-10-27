@@ -20,7 +20,7 @@ interface Order {
   customer_id: string;
   customer_name: string;
   total_amount: number;
-  status: 'pending' | 'shipped' | 'delivered';
+  status: 'pending' | 'approved' | 'shipped' | 'delivered';
   order_date: string;
   delivery_date?: string;
   items: OrderItem[];
@@ -818,7 +818,8 @@ const Orders: React.FC = () => {
   const getStatusBadge = (status: Order['status']) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
-      shipped: { color: 'bg-blue-100 text-blue-800', icon: Package, label: 'Shipped' },
+      approved: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle, label: 'Approved' },
+      shipped: { color: 'bg-purple-100 text-purple-800', icon: Package, label: 'Shipped' },
       delivered: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Delivered' }
     };
     
@@ -1291,6 +1292,7 @@ const Orders: React.FC = () => {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="shipped">Shipped</SelectItem>
                   <SelectItem value="delivered">Delivered</SelectItem>
                 </SelectContent>
@@ -1791,15 +1793,18 @@ const Orders: React.FC = () => {
                   <Label htmlFor="edit-status">Status</Label>
                   <Select value={selectedOrder.status} onValueChange={async (value) => {
                     const newStatus = value as Order['status'];
+                    console.log('🔄 Status change:', selectedOrder.status, '→', newStatus);
                     setSelectedOrder({...selectedOrder, status: newStatus});
                     
                     // Update status immediately via API for better sync
                     try {
+                      console.log('📡 Updating order status via API...');
                       await apiClient.updateOrderStatus(selectedOrder.id, newStatus);
+                      console.log('✅ Status updated successfully');
                       // Refresh orders to get updated data
                       fetchOrders();
                     } catch (error) {
-                      console.error('Failed to update order status:', error);
+                      console.error('❌ Failed to update order status:', error);
                       // Revert the status change on error
                       setSelectedOrder({...selectedOrder, status: selectedOrder.status});
                     }
@@ -1809,6 +1814,7 @@ const Orders: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
                       <SelectItem value="shipped">Shipped</SelectItem>
                       <SelectItem value="delivered">Delivered</SelectItem>
                     </SelectContent>
