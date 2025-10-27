@@ -112,6 +112,10 @@ class APIClient {
     return this.request('/orders');
   }
 
+  async getAllOrders() {
+    return this.request('/orders/all');
+  }
+
   async getOrder(id: string) {
     return this.request(`/orders/${id}`);
   }

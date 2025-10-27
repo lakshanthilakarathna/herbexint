@@ -470,6 +470,9 @@ app.get('/api/customer-portals/:portalId/orders', (req, res) => {
 app.post('/api/customer-portals/:portalId/orders', (req, res) => {
   const data = readData();
   if (!data.customer_orders) data.customer_orders = [];
+  if (!data.orders) data.orders = [];
+  if (!data.customer_portals) data.customer_portals = [];
+  
   const order = {
     ...req.body,
     id: req.body.id || generateId(),
@@ -478,7 +481,41 @@ app.post('/api/customer-portals/:portalId/orders', (req, res) => {
     created_at: req.body.created_at || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
+  
+  // Add to customer orders
   data.customer_orders.push(order);
+  
+  // Sync with main order system
+  const mainOrder = {
+    id: order.id,
+    order_number: order.order_number || `CP-${order.id}`,
+    customer_id: req.params.portalId, // Use portal ID as customer ID
+    customer_name: order.customer_name || 'Customer Portal Order',
+    total_amount: order.total_amount || 0,
+    status: order.status,
+    order_date: order.order_date || order.created_at,
+    delivery_date: order.delivery_date,
+    items: order.items || [],
+    notes: order.notes || `Customer Portal Order - ${order.customer_name}`,
+    created_by: 'customer-portal',
+    source: 'customer-portal', // Mark as customer portal order
+    portal_id: req.params.portalId,
+    created_at: order.created_at,
+    updated_at: order.updated_at
+  };
+  
+  data.orders.push(mainOrder);
+  
+  // Update customer portal statistics
+  const portal = data.customer_portals.find(p => 
+    p.id === req.params.portalId || p.unique_url === req.params.portalId
+  );
+  if (portal) {
+    portal.total_orders = (portal.total_orders || 0) + 1;
+    portal.total_amount = (portal.total_amount || 0) + (order.total_amount || 0);
+    portal.updated_at = new Date().toISOString();
+  }
+  
   writeData(data);
   res.json(order);
 });
@@ -496,11 +533,15 @@ app.get('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
 app.put('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
   const data = readData();
   if (!data.customer_orders) data.customer_orders = [];
+  if (!data.orders) data.orders = [];
+  if (!data.customer_portals) data.customer_portals = [];
+  
   const index = data.customer_orders.findIndex(o => 
     o.id === req.params.orderId && o.portal_id === req.params.portalId
   );
   if (index === -1) return res.status(404).json({ message: 'Customer order not found' });
   
+  const oldOrder = data.customer_orders[index];
   data.customer_orders[index] = {
     ...data.customer_orders[index],
     ...req.body,
@@ -508,6 +549,34 @@ app.put('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
     portal_id: req.params.portalId,
     updated_at: new Date().toISOString()
   };
+  
+  // Sync with main order system
+  const mainOrderIndex = data.orders.findIndex(o => o.id === req.params.orderId);
+  if (mainOrderIndex !== -1) {
+    data.orders[mainOrderIndex] = {
+      ...data.orders[mainOrderIndex],
+      ...req.body,
+      id: req.params.orderId,
+      customer_id: req.params.portalId,
+      customer_name: req.body.customer_name || data.orders[mainOrderIndex].customer_name,
+      total_amount: req.body.total_amount || data.orders[mainOrderIndex].total_amount,
+      status: req.body.status || data.orders[mainOrderIndex].status,
+      items: req.body.items || data.orders[mainOrderIndex].items,
+      notes: req.body.notes || data.orders[mainOrderIndex].notes,
+      updated_at: new Date().toISOString()
+    };
+  }
+  
+  // Update customer portal statistics if amount changed
+  const portal = data.customer_portals.find(p => 
+    p.id === req.params.portalId || p.unique_url === req.params.portalId
+  );
+  if (portal && req.body.total_amount !== undefined) {
+    const amountDiff = (req.body.total_amount || 0) - (oldOrder.total_amount || 0);
+    portal.total_amount = (portal.total_amount || 0) + amountDiff;
+    portal.updated_at = new Date().toISOString();
+  }
+  
   writeData(data);
   res.json(data.customer_orders[index]);
 });
@@ -515,19 +584,57 @@ app.put('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
 app.delete('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
   const data = readData();
   if (!data.customer_orders) data.customer_orders = [];
+  if (!data.orders) data.orders = [];
+  if (!data.customer_portals) data.customer_portals = [];
+  
   const index = data.customer_orders.findIndex(o => 
     o.id === req.params.orderId && o.portal_id === req.params.portalId
   );
   if (index === -1) return res.status(404).json({ message: 'Customer order not found' });
   
+  const deletedOrder = data.customer_orders[index];
+  
+  // Remove from customer orders
   data.customer_orders.splice(index, 1);
+  
+  // Remove from main order system
+  const mainOrderIndex = data.orders.findIndex(o => o.id === req.params.orderId);
+  if (mainOrderIndex !== -1) {
+    data.orders.splice(mainOrderIndex, 1);
+  }
+  
+  // Update customer portal statistics
+  const portal = data.customer_portals.find(p => 
+    p.id === req.params.portalId || p.unique_url === req.params.portalId
+  );
+  if (portal) {
+    portal.total_orders = Math.max(0, (portal.total_orders || 0) - 1);
+    portal.total_amount = Math.max(0, (portal.total_amount || 0) - (deletedOrder.total_amount || 0));
+    portal.updated_at = new Date().toISOString();
+  }
+  
   writeData(data);
   res.json({ message: 'Customer order deleted' });
 });
 
+// Get all orders (including customer portal orders) for reports
+app.get('/api/orders/all', (req, res) => {
+  const data = readData();
+  const allOrders = [
+    ...(data.orders || []),
+    ...(data.customer_orders || []).map(co => ({
+      ...co,
+      source: 'customer-portal',
+      order_number: co.order_number || `CP-${co.id}`,
+      customer_id: co.portal_id
+    }))
+  ];
+  res.json(allOrders);
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'HERB Backend API is running - Customer Portal Order endpoints available - Icon fix deployed' });
+  res.json({ status: 'ok', message: 'HERB Backend API is running - Customer Portal Order endpoints available - Icon fix deployed - Sync enabled' });
 });
 
 // Start server
