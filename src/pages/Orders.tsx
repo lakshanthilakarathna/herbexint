@@ -36,7 +36,6 @@ interface Order {
       address: string;
     };
     photo?: string; // Base64 or URL
-    signature?: string; // Base64 or URL
     delivery_notes?: string;
   };
   location?: {
@@ -1592,19 +1591,6 @@ const Orders: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Customer Signature */}
-                    {selectedOrder.delivery_confirmation.signature && (
-                      <div>
-                        <Label className="text-green-800 font-medium">Customer Signature</Label>
-                        <div className="mt-2">
-                          <img 
-                            src={selectedOrder.delivery_confirmation.signature} 
-                            alt="Customer signature" 
-                            className="max-w-full h-auto max-h-32 rounded border border-green-300 bg-white"
-                          />
-                        </div>
-                      </div>
-                    )}
 
                     {/* Delivery Notes */}
                     {selectedOrder.delivery_confirmation.delivery_notes && (

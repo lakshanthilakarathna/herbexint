@@ -4,11 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Camera, MapPin, FileSignature, X, Check } from 'lucide-react';
+import { Camera, MapPin, X, Check } from 'lucide-react';
 import { getLocationWithFallback } from '@/lib/locationUtils';
 import { 
   optimizeImage, 
-  optimizeSignature, 
   validateImageFile, 
   validatePayloadSize, 
   formatBytes 
@@ -25,7 +24,6 @@ interface DeliveryConfirmationProps {
       address: string;
     };
     photo?: string;
-    signature?: string;
     delivery_notes?: string;
   }) => Promise<void>;
   orderNumber?: string;
@@ -39,14 +37,10 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
 }) => {
   const [location, setLocation] = useState<{latitude: number; longitude: number; address: string} | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
-  const [signature, setSignature] = useState<string | null>(null);
   const [deliveryNotes, setDeliveryNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [capturingLocation, setCapturingLocation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [hasSignature, setHasSignature] = useState(false);
 
   // Capture GPS Location
   const handleCaptureLocation = async () => {
@@ -109,80 +103,22 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
     }
   };
 
-  // Signature Pad Drawing
-  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDrawing(true);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    }
-  };
-
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.lineTo(x, y);
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  };
-
-  const handleCanvasMouseUp = () => {
-    setIsDrawing(false);
-    setHasSignature(true);
-  };
-
-  const clearSignature = () => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        setHasSignature(false);
-      }
-    }
-  };
 
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      // Capture signature from canvas (optional) - use optimized compression
-      const canvas = canvasRef.current;
-      let signatureData = null;
-      if (canvas && hasSignature) {
-        signatureData = optimizeSignature(canvas, 0.7); // Use optimized signature compression
-      }
-
       // Prepare confirmation data
       const confirmationData = {
         timestamp: new Date().toISOString(),
         location: location || undefined,
         photo: photo || undefined,
-        signature: signatureData || undefined,
         delivery_notes: deliveryNotes || undefined
       };
 
       // Validate payload size before sending
       const payloadValidation = validatePayloadSize(confirmationData, 5000); // 5MB limit
       if (!payloadValidation.valid) {
-        toast.error(`Payload too large: ${formatBytes(payloadValidation.size * 1024)}. Please reduce photo/signature size.`);
+        toast.error(`Payload too large: ${formatBytes(payloadValidation.size * 1024)}. Please reduce photo size.`);
         setLoading(false);
         return;
       }
@@ -195,10 +131,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
       // Reset form
       setLocation(null);
       setPhoto(null);
-      setSignature(null);
       setDeliveryNotes('');
-      setHasSignature(false);
-      clearSignature();
       onClose();
     } catch (error) {
       console.error('Confirmation error:', error);
@@ -211,10 +144,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
   const handleClose = () => {
     setLocation(null);
     setPhoto(null);
-    setSignature(null);
     setDeliveryNotes('');
-    setHasSignature(false);
-    clearSignature();
     onClose();
   };
 
@@ -297,34 +227,6 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
                 </Button>
               </div>
             )}
-          </div>
-
-          {/* Signature */}
-          <div>
-            <Label className="flex items-center gap-2 mb-2">
-              <FileSignature className="w-4 h-4" />
-              Customer Signature (Optional) {hasSignature && <Check className="w-4 h-4 text-green-600" />}
-            </Label>
-            <div className="border rounded-lg bg-white">
-              <canvas
-                ref={canvasRef}
-                width={300}
-                height={80}
-                className="w-full border-b cursor-crosshair"
-                onMouseDown={handleCanvasMouseDown}
-                onMouseMove={handleCanvasMouseMove}
-                onMouseUp={handleCanvasMouseUp}
-                onMouseLeave={handleCanvasMouseUp}
-              />
-              {hasSignature && (
-                <div className="p-2 flex justify-end">
-                  <Button type="button" variant="ghost" size="sm" onClick={clearSignature}>
-                    Clear Signature
-                  </Button>
-                </div>
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Customer signature is optional - have customer sign above if needed</p>
           </div>
 
           {/* Delivery Notes */}
