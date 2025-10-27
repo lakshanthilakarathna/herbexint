@@ -59,7 +59,7 @@ const Customers: React.FC = () => {
       city: '',
       state: '',
       zipCode: '',
-      country: 'USA'
+      country: ''
     },
     contact_person: '',
     contact_title: '',
@@ -129,7 +129,7 @@ const Customers: React.FC = () => {
           city: '',
           state: '',
           zipCode: '',
-          country: 'USA'
+          country: ''
         },
         contact_person: newCustomer.contact_person || '',
         contact_title: newCustomer.contact_title || '',
@@ -157,7 +157,7 @@ const Customers: React.FC = () => {
           city: '',
           state: '',
           zipCode: '',
-          country: 'USA'
+          country: ''
         },
         contact_person: '',
         contact_title: '',
@@ -373,7 +373,7 @@ const Customers: React.FC = () => {
                         city: newCustomer.address?.city || '',
                         state: newCustomer.address?.state || '',
                         zipCode: newCustomer.address?.zipCode || '',
-                        country: newCustomer.address?.country || 'USA'
+                        country: newCustomer.address?.country || ''
                       }
                     })}
                     placeholder="Street address"
@@ -393,7 +393,7 @@ const Customers: React.FC = () => {
                           city: e.target.value,
                           state: newCustomer.address?.state || '',
                           zipCode: newCustomer.address?.zipCode || '',
-                          country: newCustomer.address?.country || 'USA'
+                          country: newCustomer.address?.country || ''
                         }
                       })}
                       placeholder="City"
@@ -411,7 +411,7 @@ const Customers: React.FC = () => {
                           city: newCustomer.address?.city || '',
                           state: e.target.value,
                           zipCode: newCustomer.address?.zipCode || '',
-                          country: newCustomer.address?.country || 'USA'
+                          country: newCustomer.address?.country || ''
                         }
                       })}
                       placeholder="State"
@@ -429,7 +429,7 @@ const Customers: React.FC = () => {
                           city: newCustomer.address?.city || '',
                           state: newCustomer.address?.state || '',
                           zipCode: e.target.value,
-                          country: newCustomer.address?.country || 'USA'
+                          country: newCustomer.address?.country || ''
                         }
                       })}
                       placeholder="ZIP Code"
@@ -772,7 +772,6 @@ const Customers: React.FC = () => {
                 <p className="text-sm">
                   {selectedCustomer.address.city}, {selectedCustomer.address.state} {selectedCustomer.address.zipCode}
                 </p>
-                <p className="text-sm">{selectedCustomer.address.country}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -923,7 +922,7 @@ const Customers: React.FC = () => {
                     city: editCustomer.address?.city || '',
                     state: editCustomer.address?.state || '',
                     zipCode: editCustomer.address?.zipCode || '',
-                    country: editCustomer.address?.country || 'USA'
+                    country: editCustomer.address?.country || ''
                   }
                 })}
                 placeholder="Street address"
@@ -943,7 +942,7 @@ const Customers: React.FC = () => {
                       city: e.target.value,
                       state: editCustomer.address?.state || '',
                       zipCode: editCustomer.address?.zipCode || '',
-                      country: editCustomer.address?.country || 'USA'
+                      country: editCustomer.address?.country || ''
                     }
                   })}
                   placeholder="City"
@@ -961,7 +960,7 @@ const Customers: React.FC = () => {
                       city: editCustomer.address?.city || '',
                       state: e.target.value,
                       zipCode: editCustomer.address?.zipCode || '',
-                      country: editCustomer.address?.country || 'USA'
+                      country: editCustomer.address?.country || ''
                     }
                   })}
                   placeholder="State"
@@ -979,7 +978,7 @@ const Customers: React.FC = () => {
                       city: editCustomer.address?.city || '',
                       state: editCustomer.address?.state || '',
                       zipCode: e.target.value,
-                      country: editCustomer.address?.country || 'USA'
+                      country: editCustomer.address?.country || ''
                     }
                   })}
                   placeholder="ZIP Code"
