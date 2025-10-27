@@ -46,11 +46,19 @@ interface Customer {
   phone: string;
 }
 
+interface User {
+  id: string;
+  name: string;
+  role_id: string;
+  role_name: string;
+}
+
 const Visits: React.FC = () => {
   const { user, hasPermission } = useAuth();
   const navigate = useNavigate();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<string>('30'); // days
@@ -65,13 +73,15 @@ const Visits: React.FC = () => {
     purpose: 'sales_call',
     outcome: 'successful',
     notes: '',
-    photos: []
+    photos: [],
+    sales_rep_id: user?.id || ''
   });
   const [editVisit, setEditVisit] = useState<Partial<Visit>>({});
 
   useEffect(() => {
     fetchVisits();
     fetchCustomers();
+    fetchUsers();
   }, []);
 
   const fetchVisits = async () => {
@@ -104,6 +114,23 @@ const Visits: React.FC = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const data = await apiClient.getUsers();
+      const formattedUsers = Array.isArray(data) ? data.map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        role_id: u.role_id,
+        role_name: u.role_name
+      })) : [];
+      setUsers(formattedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+      setUsers([]);
+    }
+  };
+
 
 
 
@@ -118,25 +145,34 @@ const Visits: React.FC = () => {
       let locationData = undefined;
       console.log('🌍 Attempting to get GPS location for visit tracking...');
       
-      const location = await getLocationWithFallback();
-      if (location) {
-        locationData = {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          address: location.address,
-          timestamp: new Date().toISOString()
-        };
-        toast.success(`GPS location captured: ${location.address}`, { duration: 3000 });
-        console.log('✅ Location data captured:', locationData);
-      } else {
-        console.log('ℹ️ No GPS location - visit will be created without location tracking');
-        // Don't show warning - just silently proceed without location
+      try {
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          toast.success(`GPS location captured: ${location.address}`, { duration: 3000 });
+          console.log('✅ Location data captured:', locationData);
+        }
+      } catch (locationError) {
+        console.log('ℹ️ GPS location failed - visit will be created without location tracking:', locationError);
+        // Don't show error to user - just silently proceed without location
+        toast.info('Visit created without location tracking', { duration: 2000 });
       }
 
 
       const customer = customers.find(c => c.id === newVisit.customer_id);
       if (!customer) {
         toast.error('Customer not found');
+        return;
+      }
+
+      const selectedSalesRep = users.find(u => u.id === newVisit.sales_rep_id);
+      if (!selectedSalesRep) {
+        toast.error('Sales representative not found');
         return;
       }
 
@@ -163,8 +199,8 @@ const Visits: React.FC = () => {
         id: 'visit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
         customer_id: newVisit.customer_id,
         customer_name: customer.name,
-        sales_rep_id: user?.id || 'system',
-        sales_rep_name: user?.name || 'Unknown',
+        sales_rep_id: newVisit.sales_rep_id || user?.id || 'system',
+        sales_rep_name: selectedSalesRep.name,
         check_in_time: new Date().toISOString(),
         location: locationData,
         purpose: newVisit.purpose || 'sales_call',
@@ -185,7 +221,8 @@ const Visits: React.FC = () => {
         purpose: 'sales_call',
         outcome: 'successful',
         notes: '',
-        photos: []
+        photos: [],
+        sales_rep_id: user?.id || ''
       });
       
       toast.success('Visit created successfully!');
@@ -365,6 +402,23 @@ const Visits: React.FC = () => {
                       {customers.map(customer => (
                         <SelectItem key={customer.id} value={customer.id}>
                           {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sales Rep Selection */}
+                <div>
+                  <Label htmlFor="sales_rep">Sales Representative <span className="text-red-500">*</span></Label>
+                  <Select value={newVisit.sales_rep_id} onValueChange={(value) => setNewVisit({...newVisit, sales_rep_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select sales rep" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.filter(u => u.role_id === 'sales-rep-role-id' || u.role_id === 'sales-manager-role-id' || u.role_id === 'admin-role-id').map(user => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name} ({user.role_name})
                         </SelectItem>
                       ))}
                     </SelectContent>
