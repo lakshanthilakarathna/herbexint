@@ -553,7 +553,7 @@ const Orders: React.FC = () => {
             const currentStock = freshProduct.stock_quantity || 0;
             const newStockQuantity = currentStock - item.quantity;
             const productName = freshProduct.product_name || freshProduct.name || 'Product';
-            console.log(`Updating stock for ${productName}: ${currentStock} → ${newStockQuantity}`);
+            console.log(`📦 Creating order - Updating stock for ${productName}: ${currentStock} → ${newStockQuantity} (ordered: ${item.quantity})`);
             
             // Update product stock in database
             await apiClient.updateProduct(item.product_id, {
@@ -609,7 +609,7 @@ const Orders: React.FC = () => {
               const currentStock = freshProduct.stock_quantity || 0;
               const newStockQuantity = currentStock + item.quantity;
               const productName = freshProduct.product_name || freshProduct.name || 'Product';
-              console.log(`Restoring stock for ${productName}: ${currentStock} → ${newStockQuantity} (order ${newStatus})`);
+              console.log(`📦 Status change - Restoring stock for ${productName}: ${currentStock} → ${newStockQuantity} (restored: ${item.quantity})`);
               
               await apiClient.updateProduct(item.product_id, {
                 stock_quantity: newStockQuantity
@@ -711,7 +711,7 @@ const Orders: React.FC = () => {
               const currentStock = freshProduct.stock_quantity || 0;
               const newStockQuantity = currentStock - difference;
               const productName = freshProduct.product_name || freshProduct.name || 'Product';
-              console.log(`Adjusting stock for ${productName}: ${currentStock} → ${newStockQuantity} (order change: ${difference > 0 ? '+' : ''}${difference})`);
+              console.log(`📦 Editing order - Adjusting stock for ${productName}: ${currentStock} → ${newStockQuantity} (order change: ${difference > 0 ? '+' : ''}${difference})`);
               
               await apiClient.updateProduct(productId, {
                 stock_quantity: Math.max(0, newStockQuantity)
@@ -772,7 +772,7 @@ const Orders: React.FC = () => {
               const currentStock = freshProduct.stock_quantity || 0;
               const newStockQuantity = currentStock + item.quantity;
               const productName = freshProduct.product_name || freshProduct.name || 'Product';
-              console.log(`Restoring stock for ${productName}: ${currentStock} → ${newStockQuantity}`);
+              console.log(`📦 Deleting order - Restoring stock for ${productName}: ${currentStock} → ${newStockQuantity} (restored: ${item.quantity})`);
               
               // Update product stock in database
               await apiClient.updateProduct(item.product_id, {
