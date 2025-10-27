@@ -154,7 +154,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
         <DialogHeader>
           <DialogTitle>Confirm Delivery</DialogTitle>
           <DialogDescription>
-            Record delivery confirmation for order {orderNumber}. The delivery location will be sent with the order.
+            Record delivery confirmation for order {orderNumber}. The delivery location will be recorded separately from the order location.
           </DialogDescription>
         </DialogHeader>
 

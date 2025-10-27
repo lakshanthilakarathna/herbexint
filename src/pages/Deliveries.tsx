@@ -71,20 +71,13 @@ const Deliveries: React.FC = () => {
         updated_at: new Date().toISOString()
       };
 
-      // If delivery location is captured, also update the order location
-      if (confirmation.location) {
-        orderUpdates.location = {
-          latitude: confirmation.location.latitude,
-          longitude: confirmation.location.longitude,
-          address: confirmation.location.address,
-          timestamp: confirmation.timestamp
-        };
-      }
+      // Note: We don't update the main order location - only the delivery confirmation location
+      // The original order location should remain unchanged
 
       // Update order status to delivered and add confirmation
       await apiClient.updateOrder(selectedOrder.id, orderUpdates);
 
-      toast.success('Delivery confirmed and order location sent successfully!');
+      toast.success('Delivery confirmed successfully!');
       await fetchOrders();
       setIsConfirmDialogOpen(false);
       setSelectedOrder(null);
