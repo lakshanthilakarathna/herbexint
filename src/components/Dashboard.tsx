@@ -133,6 +133,7 @@ export const Dashboard: React.FC = () => {
       'admin-role-id': 'System Administrator',
       'sales-manager-role-id': 'Sales Manager',
       'sales-rep-role-id': 'Sales Representative',
+      'delivery-role-id': 'Delivery Personnel',
       'pharmacist-role-id': 'Distributor/Retailer',
       'inventory-role-id': 'Inventory Manager',
       'finance-role-id': 'Finance Manager',
@@ -145,6 +146,7 @@ export const Dashboard: React.FC = () => {
     if (roleId === 'admin-role-id') return 'destructive';
     if (roleId === 'sales-manager-role-id') return 'default';
     if (roleId === 'sales-rep-role-id') return 'secondary';
+    if (roleId === 'delivery-role-id') return 'outline';
     return 'outline';
   };
 
@@ -160,6 +162,12 @@ export const Dashboard: React.FC = () => {
       icon: ShoppingCart,
       href: '/orders',
       permission: 'orders:read'
+    },
+    {
+      title: 'My Deliveries',
+      icon: Package,
+      href: '/deliveries',
+      permission: 'deliveries:read'
     },
     {
       title: 'Customers',
