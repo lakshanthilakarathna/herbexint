@@ -94,7 +94,7 @@ const Users: React.FC = () => {
             'orders:read', 'orders:write',
             'customers:read', 'customers:write',
             'products:read',
-            'visits:read', 'visits:write'
+            'visits:read', 'visits:write', 'visits:delete'
           ],
           status: 'active',
           created_at: '2025-10-01T00:00:00Z',
@@ -112,7 +112,7 @@ const Users: React.FC = () => {
             'orders:read', 'orders:write',
             'customers:read', 'customers:write',
             'products:read',
-            'visits:read', 'visits:write'
+            'visits:read', 'visits:write', 'visits:delete'
           ],
           status: 'active',
           created_at: '2025-10-02T00:00:00Z',
@@ -180,7 +180,7 @@ const Users: React.FC = () => {
         'orders:read', 'orders:write',
         'customers:read', 'customers:write',
         'products:read',
-        'visits:read', 'visits:write'
+        'visits:read', 'visits:write', 'visits:delete'
       ];
 
       const newUserData: User = {
