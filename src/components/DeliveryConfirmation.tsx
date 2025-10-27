@@ -6,6 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from 'sonner';
 import { Camera, MapPin, FileSignature, X, Check } from 'lucide-react';
 import { getLocationWithFallback } from '@/lib/locationUtils';
+import { 
+  optimizeImage, 
+  optimizeSignature, 
+  validateImageFile, 
+  validatePayloadSize, 
+  formatBytes 
+} from '@/lib/imageOptimization';
 
 interface DeliveryConfirmationProps {
   open: boolean;
@@ -64,52 +71,41 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
     }
   };
 
-  // Compress image function
-  const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onload = () => {
-        // Calculate new dimensions
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        // Draw and compress
-        ctx?.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressedDataUrl);
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
-  // Capture Photo
+  // Capture Photo with comprehensive optimization
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      toast.error('Photo size must be less than 5MB');
+    // Validate file first
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error || 'Invalid image file');
       return;
     }
 
     try {
-      toast.info('Compressing photo...', { duration: 2000 });
-      const compressedPhoto = await compressImage(file, 800, 0.6); // Max 800px width, 60% quality
-      setPhoto(compressedPhoto);
-      toast.success('Photo captured and compressed!');
+      toast.info('Optimizing photo...', { duration: 3000 });
+      
+      // Use comprehensive image optimization
+      const result = await optimizeImage(file, {
+        maxWidth: 600,        // Smaller max width
+        maxHeight: 400,       // Limit height too
+        quality: 0.6,        // Lower quality for smaller size
+        format: 'jpeg',      // Use JPEG for better compression
+        maxSizeKB: 300       // Max 300KB per photo
+      });
+
+      setPhoto(result.dataUrl);
+      
+      // Show optimization results
+      toast.success(
+        `Photo optimized! ${formatBytes(result.originalSize)} → ${formatBytes(result.optimizedSize)} (${result.compressionRatio.toFixed(1)}% smaller)`,
+        { duration: 4000 }
+      );
+      
     } catch (error) {
-      console.error('Photo compression error:', error);
-      toast.error('Failed to process photo');
+      console.error('Photo optimization error:', error);
+      toast.error('Failed to optimize photo');
     }
   };
 
@@ -167,21 +163,34 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      // Capture signature from canvas (optional) - compress it
+      // Capture signature from canvas (optional) - use optimized compression
       const canvas = canvasRef.current;
       let signatureData = null;
       if (canvas && hasSignature) {
-        // Compress signature to reduce payload size
-        signatureData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG with 80% quality
+        signatureData = optimizeSignature(canvas, 0.7); // Use optimized signature compression
       }
 
-      await onConfirm({
+      // Prepare confirmation data
+      const confirmationData = {
         timestamp: new Date().toISOString(),
         location: location || undefined,
         photo: photo || undefined,
         signature: signatureData || undefined,
         delivery_notes: deliveryNotes || undefined
-      });
+      };
+
+      // Validate payload size before sending
+      const payloadValidation = validatePayloadSize(confirmationData, 5000); // 5MB limit
+      if (!payloadValidation.valid) {
+        toast.error(`Payload too large: ${formatBytes(payloadValidation.size * 1024)}. Please reduce photo/signature size.`);
+        setLoading(false);
+        return;
+      }
+
+      // Log payload size for debugging
+      console.log(`Delivery confirmation payload size: ${formatBytes(payloadValidation.size * 1024)}`);
+
+      await onConfirm(confirmationData);
 
       // Reset form
       setLocation(null);
@@ -299,8 +308,8 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
             <div className="border rounded-lg bg-white">
               <canvas
                 ref={canvasRef}
-                width={400}
-                height={100}
+                width={300}
+                height={80}
                 className="w-full border-b cursor-crosshair"
                 onMouseDown={handleCanvasMouseDown}
                 onMouseMove={handleCanvasMouseMove}
