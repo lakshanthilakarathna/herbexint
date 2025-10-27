@@ -33,6 +33,7 @@ if (!fs.existsSync(dataFile)) {
     orders: [],
     users: [],
     visits: [],
+    customer_portals: [],
     system_logs: []
   };
   fs.writeFileSync(dataFile, JSON.stringify(initialData, null, 2));
@@ -45,7 +46,7 @@ function readData() {
     return JSON.parse(data);
   } catch (error) {
     console.error('Error reading data:', error);
-    return { products: [], customers: [], orders: [], users: [], visits: [], system_logs: [] };
+    return { products: [], customers: [], orders: [], users: [], visits: [], customer_portals: [], system_logs: [] };
   }
 }
 
@@ -392,6 +393,60 @@ app.delete('/api/system-logs/:id', (req, res) => {
   data.system_logs.splice(index, 1);
   writeData(data);
   res.json({ message: 'System log deleted' });
+});
+
+// CUSTOMER PORTALS API
+app.get('/api/customer-portals', (req, res) => {
+  const data = readData();
+  res.json(data.customer_portals || []);
+});
+
+app.get('/api/customer-portals/:id', (req, res) => {
+  const data = readData();
+  const portal = data.customer_portals?.find(p => p.id === req.params.id);
+  if (!portal) return res.status(404).json({ message: 'Customer portal not found' });
+  res.json(portal);
+});
+
+app.post('/api/customer-portals', (req, res) => {
+  const data = readData();
+  const portal = {
+    ...req.body,
+    id: req.body.id || generateId(),
+    created_at: req.body.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  if (!data.customer_portals) data.customer_portals = [];
+  data.customer_portals.push(portal);
+  writeData(data);
+  res.json(portal);
+});
+
+app.put('/api/customer-portals/:id', (req, res) => {
+  const data = readData();
+  if (!data.customer_portals) data.customer_portals = [];
+  const index = data.customer_portals.findIndex(p => p.id === req.params.id);
+  if (index === -1) return res.status(404).json({ message: 'Customer portal not found' });
+  
+  data.customer_portals[index] = {
+    ...data.customer_portals[index],
+    ...req.body,
+    id: req.params.id,
+    updated_at: new Date().toISOString()
+  };
+  writeData(data);
+  res.json(data.customer_portals[index]);
+});
+
+app.delete('/api/customer-portals/:id', (req, res) => {
+  const data = readData();
+  if (!data.customer_portals) data.customer_portals = [];
+  const index = data.customer_portals.findIndex(p => p.id === req.params.id);
+  if (index === -1) return res.status(404).json({ message: 'Customer portal not found' });
+  
+  data.customer_portals.splice(index, 1);
+  writeData(data);
+  res.json({ message: 'Customer portal deleted' });
 });
 
 // Health check

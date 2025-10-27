@@ -196,6 +196,35 @@ class APIClient {
       body: JSON.stringify(log),
     });
   }
+
+  // Customer Portals
+  async getCustomerPortals() {
+    return this.request('/customer-portals');
+  }
+
+  async getCustomerPortal(id: string) {
+    return this.request(`/customer-portals/${id}`);
+  }
+
+  async createCustomerPortal(portal: any) {
+    return this.request('/customer-portals', {
+      method: 'POST',
+      body: JSON.stringify(portal),
+    });
+  }
+
+  async updateCustomerPortal(id: string, updates: any) {
+    return this.request(`/customer-portals/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteCustomerPortal(id: string) {
+    return this.request(`/customer-portals/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiClient = new APIClient();
