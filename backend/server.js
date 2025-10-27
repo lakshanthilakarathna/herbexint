@@ -559,6 +559,29 @@ app.post('/api/customer-portals/:portalId/orders', (req, res) => {
   console.log(`✅ Main order created with ID: ${mainOrder.id}`);
   console.log(`📊 Total main orders: ${data.orders.length}`);
   
+  // Update product stock quantities
+  if (order.items && order.items.length > 0) {
+    let stockUpdateCount = 0;
+    for (const item of order.items) {
+      try {
+        const product = data.products.find(p => p.id === item.product_id);
+        if (product) {
+          const currentStock = product.stock_quantity || 0;
+          const newStockQuantity = Math.max(0, currentStock - item.quantity);
+          
+          console.log(`📦 Updating stock for ${product.product_name || product.name}: ${currentStock} -> ${newStockQuantity} (ordered: ${item.quantity})`);
+          
+          product.stock_quantity = newStockQuantity;
+          product.updated_at = new Date().toISOString();
+          stockUpdateCount++;
+        }
+      } catch (stockError) {
+        console.error(`Failed to update stock for product ${item.product_id}:`, stockError);
+      }
+    }
+    console.log(`✅ Stock updated for ${stockUpdateCount} products in customer portal order`);
+  }
+  
   // Update customer portal statistics
   const portal = data.customer_portals.find(p => 
     p.id === req.params.portalId || p.unique_url === req.params.portalId
@@ -654,6 +677,29 @@ app.delete('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
   const mainOrderIndex = data.orders.findIndex(o => o.id === req.params.orderId);
   if (mainOrderIndex !== -1) {
     data.orders.splice(mainOrderIndex, 1);
+  }
+  
+  // Restore product stock quantities
+  if (deletedOrder.items && deletedOrder.items.length > 0) {
+    let stockRestoreCount = 0;
+    for (const item of deletedOrder.items) {
+      try {
+        const product = data.products.find(p => p.id === item.product_id);
+        if (product) {
+          const currentStock = product.stock_quantity || 0;
+          const newStockQuantity = currentStock + item.quantity;
+          
+          console.log(`📦 Restoring stock for ${product.product_name || product.name}: ${currentStock} -> ${newStockQuantity} (restored: ${item.quantity})`);
+          
+          product.stock_quantity = newStockQuantity;
+          product.updated_at = new Date().toISOString();
+          stockRestoreCount++;
+        }
+      } catch (stockError) {
+        console.error(`Failed to restore stock for product ${item.product_id}:`, stockError);
+      }
+    }
+    console.log(`✅ Stock restored for ${stockRestoreCount} products in customer portal order deletion`);
   }
   
   // Update customer portal statistics
