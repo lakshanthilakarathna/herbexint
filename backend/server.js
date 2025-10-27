@@ -500,11 +500,47 @@ app.post('/api/customer-portals/:portalId/orders', (req, res) => {
   // Add to customer orders
   data.customer_orders.push(order);
   
+  // Create or update customer record
+  if (!data.customers) data.customers = [];
+  const existingCustomer = data.customers.find(c => 
+    c.email === order.customer_email || 
+    (c.name === order.customer_name && c.phone === order.customer_phone)
+  );
+  
+  let customerId = req.params.portalId; // Default to portal ID
+  
+  if (!existingCustomer) {
+    // Create new customer record
+    const newCustomer = {
+      id: generateId(),
+      name: order.customer_name || 'Customer Portal Customer',
+      email: order.customer_email || '',
+      phone: order.customer_phone || '',
+      address: order.delivery_address || '',
+      customer_type: 'retail',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      source: 'customer-portal',
+      portal_id: req.params.portalId
+    };
+    data.customers.push(newCustomer);
+    customerId = newCustomer.id;
+    console.log(`✅ Created new customer record: ${newCustomer.name}`);
+  } else {
+    // Update existing customer with latest info
+    existingCustomer.address = order.delivery_address || existingCustomer.address;
+    existingCustomer.phone = order.customer_phone || existingCustomer.phone;
+    existingCustomer.updated_at = new Date().toISOString();
+    customerId = existingCustomer.id;
+    console.log(`✅ Updated existing customer: ${existingCustomer.name}`);
+  }
+  
   // Sync with main order system
   const mainOrder = {
     id: order.id,
     order_number: order.order_number || `CP-${order.id}`,
-    customer_id: req.params.portalId, // Use portal ID as customer ID
+    customer_id: customerId, // Use actual customer ID
     customer_name: order.customer_name || 'Customer Portal Order',
     total_amount: order.total_amount || 0,
     status: order.status,
@@ -723,7 +759,7 @@ app.patch('/api/customer-portals/:portalId/orders/:orderId/status', (req, res) =
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'HERB Backend API is running - Customer Portal Order endpoints available - Icon fix deployed - Sync enabled - Status sync enabled' });
+  res.json({ status: 'ok', message: 'HERB Backend API is running - Customer Portal Order endpoints available - Icon fix deployed - Sync enabled - Status sync enabled - Customer sync enabled - Real-time sync active' });
 });
 
 // Start server

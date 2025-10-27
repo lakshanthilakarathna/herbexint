@@ -1801,10 +1801,15 @@ const Orders: React.FC = () => {
                       console.log('📡 Updating order status via API...');
                       await apiClient.updateOrderStatus(selectedOrder.id, newStatus);
                       console.log('✅ Status updated successfully');
-                      // Refresh orders to get updated data
-                      fetchOrders();
+                      
+                      // Auto-refresh orders to show updated status immediately
+                      await fetchOrders();
+                      
+                      // Show success message
+                      toast.success(`Order status updated to ${newStatus}`, { duration: 2000 });
                     } catch (error) {
                       console.error('❌ Failed to update order status:', error);
+                      toast.error('Failed to update order status', { duration: 3000 });
                       // Revert the status change on error
                       setSelectedOrder({...selectedOrder, status: selectedOrder.status});
                     }
