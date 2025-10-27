@@ -1789,8 +1789,20 @@ const Orders: React.FC = () => {
               {user?.role_id === 'admin-role-id' && (
                 <div>
                   <Label htmlFor="edit-status">Status</Label>
-                  <Select value={selectedOrder.status} onValueChange={(value) => {
-                    setSelectedOrder({...selectedOrder, status: value as Order['status']});
+                  <Select value={selectedOrder.status} onValueChange={async (value) => {
+                    const newStatus = value as Order['status'];
+                    setSelectedOrder({...selectedOrder, status: newStatus});
+                    
+                    // Update status immediately via API for better sync
+                    try {
+                      await apiClient.updateOrderStatus(selectedOrder.id, newStatus);
+                      // Refresh orders to get updated data
+                      fetchOrders();
+                    } catch (error) {
+                      console.error('Failed to update order status:', error);
+                      // Revert the status change on error
+                      setSelectedOrder({...selectedOrder, status: selectedOrder.status});
+                    }
                   }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />

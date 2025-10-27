@@ -195,6 +195,9 @@ app.post('/api/orders', (req, res) => {
 
 app.put('/api/orders/:id', (req, res) => {
   const data = readData();
+  if (!data.orders) data.orders = [];
+  if (!data.customer_orders) data.customer_orders = [];
+  
   const index = data.orders.findIndex(o => o.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Order not found' });
   
@@ -204,6 +207,18 @@ app.put('/api/orders/:id', (req, res) => {
     id: req.params.id,
     updated_at: new Date().toISOString()
   };
+  
+  // Sync with customer portal orders if this is a customer portal order
+  const customerOrderIndex = data.customer_orders.findIndex(co => co.id === req.params.id);
+  if (customerOrderIndex !== -1) {
+    data.customer_orders[customerOrderIndex] = {
+      ...data.customer_orders[customerOrderIndex],
+      ...req.body,
+      id: req.params.id,
+      updated_at: new Date().toISOString()
+    };
+  }
+  
   writeData(data);
   res.json(data.orders[index]);
 });
@@ -632,9 +647,77 @@ app.get('/api/orders/all', (req, res) => {
   res.json(allOrders);
 });
 
+// Update order status specifically (with sync)
+app.patch('/api/orders/:id/status', (req, res) => {
+  const data = readData();
+  if (!data.orders) data.orders = [];
+  if (!data.customer_orders) data.customer_orders = [];
+  
+  const index = data.orders.findIndex(o => o.id === req.params.id);
+  if (index === -1) return res.status(404).json({ message: 'Order not found' });
+  
+  const newStatus = req.body.status;
+  if (!newStatus) return res.status(400).json({ message: 'Status is required' });
+  
+  // Update main order
+  data.orders[index] = {
+    ...data.orders[index],
+    status: newStatus,
+    updated_at: new Date().toISOString()
+  };
+  
+  // Sync with customer portal orders if this is a customer portal order
+  const customerOrderIndex = data.customer_orders.findIndex(co => co.id === req.params.id);
+  if (customerOrderIndex !== -1) {
+    data.customer_orders[customerOrderIndex] = {
+      ...data.customer_orders[customerOrderIndex],
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    };
+  }
+  
+  writeData(data);
+  res.json(data.orders[index]);
+});
+
+// Update customer portal order status specifically (with sync)
+app.patch('/api/customer-portals/:portalId/orders/:orderId/status', (req, res) => {
+  const data = readData();
+  if (!data.customer_orders) data.customer_orders = [];
+  if (!data.orders) data.orders = [];
+  
+  const index = data.customer_orders.findIndex(o => 
+    o.id === req.params.orderId && o.portal_id === req.params.portalId
+  );
+  if (index === -1) return res.status(404).json({ message: 'Customer order not found' });
+  
+  const newStatus = req.body.status;
+  if (!newStatus) return res.status(400).json({ message: 'Status is required' });
+  
+  // Update customer portal order
+  data.customer_orders[index] = {
+    ...data.customer_orders[index],
+    status: newStatus,
+    updated_at: new Date().toISOString()
+  };
+  
+  // Sync with main order system
+  const mainOrderIndex = data.orders.findIndex(o => o.id === req.params.orderId);
+  if (mainOrderIndex !== -1) {
+    data.orders[mainOrderIndex] = {
+      ...data.orders[mainOrderIndex],
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    };
+  }
+  
+  writeData(data);
+  res.json(data.customer_orders[index]);
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'HERB Backend API is running - Customer Portal Order endpoints available - Icon fix deployed - Sync enabled' });
+  res.json({ status: 'ok', message: 'HERB Backend API is running - Customer Portal Order endpoints available - Icon fix deployed - Sync enabled - Status sync enabled' });
 });
 
 // Start server

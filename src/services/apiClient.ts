@@ -134,6 +134,13 @@ class APIClient {
     });
   }
 
+  async updateOrderStatus(id: string, status: string) {
+    return this.request(`/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
   async deleteOrder(id: string) {
     return this.request(`/orders/${id}`, {
       method: 'DELETE',
@@ -268,6 +275,13 @@ class APIClient {
     return this.request(`/customer-portals/${portalId}/orders/${orderId}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
+    });
+  }
+
+  async updateCustomerOrderStatus(portalId: string, orderId: string, status: string) {
+    return this.request(`/customer-portals/${portalId}/orders/${orderId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     });
   }
 
