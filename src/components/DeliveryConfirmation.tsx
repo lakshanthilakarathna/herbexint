@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Camera, MapPin, X, Check } from 'lucide-react';
-import { GPSStatus } from '@/components/GPSStatus';
+import { getLocationWithFallback } from '@/lib/locationUtils';
 import { 
   optimizeImage, 
   validateImageFile, 
@@ -53,7 +53,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
           longitude: loc.longitude,
           address: loc.address
         });
-        toast.success('Location captured!');
+        toast.success('✅ Location captured!', { duration: 5000 });
       } else {
         toast.error('Could not capture location');
       }
@@ -156,8 +156,8 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
           <DialogTitle>Confirm Delivery</DialogTitle>
         <DialogDescription>
           Record delivery confirmation for order {orderNumber}. The delivery location will be recorded separately from the order location.
-          <div className="mt-2">
-            <GPSStatus showTestButton={false} />
+          <div className="mt-2 text-sm text-gray-600">
+            💡 Click "Capture Location" to get GPS coordinates
           </div>
         </DialogDescription>
         </DialogHeader>
