@@ -28,7 +28,7 @@ const Reports: React.FC = () => {
     try {
       setLoading(true);
       // Load data from API backend
-      const ordersData = await apiClient.getOrders();
+      const ordersData = await apiClient.getAllOrders();
       const productsData = await apiClient.getProducts();
       const customersData = await apiClient.getCustomers();
       const usersData = await apiClient.getUsers();

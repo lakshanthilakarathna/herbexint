@@ -43,7 +43,12 @@ export const SalesRepPerformance: React.FC<SalesRepPerformanceProps> = ({ orders
 
   // Calculate metrics per rep
   const repPerformance = allReps.map(rep => {
-    const repOrders = orders.filter((o: any) => o.created_by_user_id === rep.id);
+    // Filter orders by created_by field (for internal orders) or created_by_user_id
+    const repOrders = orders.filter((o: any) => 
+      o.created_by === rep.id || 
+      o.created_by_user_id === rep.id ||
+      (rep.id === 'admin-user-id' && o.created_by === 'admin-user-id')
+    );
     const totalSales = repOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
     const orderCount = repOrders.length;
     const avgOrderValue = orderCount > 0 ? totalSales / orderCount : 0;
