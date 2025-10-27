@@ -700,6 +700,9 @@ const Orders: React.FC = () => {
         assigned_to: selectedOrder.assigned_to,
         updated_at: new Date().toISOString()
       });
+      
+      // Also update status specifically for better sync
+      await apiClient.updateOrderStatus(selectedOrder.id, selectedOrder.status);
 
       // Adjust product stock quantities based on changes
       if (originalOrder) {
@@ -744,9 +747,9 @@ const Orders: React.FC = () => {
         // Refresh products to show updated stock
         if (stockAdjustCount > 0) {
           await fetchProducts();
-          toast.success(`Order updated! Stock adjusted for ${stockAdjustCount} products.`);
+          toast.success(`Order updated! Stock adjusted for ${stockAdjustCount} products. Status synced.`);
         } else {
-          toast.success('Order updated successfully');
+          toast.success('Order updated successfully! Status synced.');
         }
       }
 
@@ -755,6 +758,9 @@ const Orders: React.FC = () => {
       setOrders(orders.map(order => 
         order.id === selectedOrder.id ? updatedOrder : order
       ));
+      
+      // Refresh orders to show updated data
+      await fetchOrders();
       
       setIsEditDialogOpen(false);
     } catch (error) {
@@ -1791,28 +1797,10 @@ const Orders: React.FC = () => {
               {user?.role_id === 'admin-role-id' && (
                 <div>
                   <Label htmlFor="edit-status">Status</Label>
-                  <Select value={selectedOrder.status} onValueChange={async (value) => {
+                  <Select value={selectedOrder.status} onValueChange={(value) => {
                     const newStatus = value as Order['status'];
-                    console.log('🔄 Status change:', selectedOrder.status, '→', newStatus);
+                    console.log('🔄 Status change (local):', selectedOrder.status, '→', newStatus);
                     setSelectedOrder({...selectedOrder, status: newStatus});
-                    
-                    // Update status immediately via API for better sync
-                    try {
-                      console.log('📡 Updating order status via API...');
-                      await apiClient.updateOrderStatus(selectedOrder.id, newStatus);
-                      console.log('✅ Status updated successfully');
-                      
-                      // Auto-refresh orders to show updated status immediately
-                      await fetchOrders();
-                      
-                      // Show success message
-                      toast.success(`Order status updated to ${newStatus}`, { duration: 2000 });
-                    } catch (error) {
-                      console.error('❌ Failed to update order status:', error);
-                      toast.error('Failed to update order status', { duration: 3000 });
-                      // Revert the status change on error
-                      setSelectedOrder({...selectedOrder, status: selectedOrder.status});
-                    }
                   }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
