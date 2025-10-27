@@ -219,7 +219,7 @@ const CustomerPortals: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2">
-        {(
+        {hasPermission('customers:write') && (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
