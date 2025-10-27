@@ -134,14 +134,9 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
   };
 
   const handleConfirm = async () => {
-    if (!hasSignature) {
-      toast.error('Please provide customer signature');
-      return;
-    }
-
     setLoading(true);
     try {
-      // Capture signature from canvas
+      // Capture signature from canvas (optional)
       const canvas = canvasRef.current;
       let signatureData = null;
       if (canvas && hasSignature) {
@@ -267,7 +262,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
           <div>
             <Label className="flex items-center gap-2 mb-2">
               <FileSignature className="w-4 h-4" />
-              Customer Signature {hasSignature && <Check className="w-4 h-4 text-green-600" />}
+              Customer Signature (Optional) {hasSignature && <Check className="w-4 h-4 text-green-600" />}
             </Label>
             <div className="border rounded-lg bg-white">
               <canvas
@@ -288,7 +283,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Have customer sign above</p>
+            <p className="text-xs text-gray-500 mt-1">Customer signature is optional - have customer sign above if needed</p>
           </div>
 
           {/* Delivery Notes */}
@@ -308,7 +303,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
             <Button variant="outline" onClick={handleClose} disabled={loading}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm} disabled={loading || !hasSignature}>
+            <Button onClick={handleConfirm} disabled={loading}>
               {loading ? 'Confirming...' : 'Confirm Delivery'}
             </Button>
           </div>
