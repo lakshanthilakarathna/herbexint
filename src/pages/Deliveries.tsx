@@ -64,14 +64,27 @@ const Deliveries: React.FC = () => {
     if (!selectedOrder) return;
 
     try {
-      // Update order status to delivered and add confirmation
-      await apiClient.updateOrder(selectedOrder.id, {
+      // Prepare order updates
+      const orderUpdates: any = {
         status: 'delivered',
         delivery_confirmation: confirmation,
         updated_at: new Date().toISOString()
-      });
+      };
 
-      toast.success('Delivery confirmed successfully!');
+      // If delivery location is captured, also update the order location
+      if (confirmation.location) {
+        orderUpdates.location = {
+          latitude: confirmation.location.latitude,
+          longitude: confirmation.location.longitude,
+          address: confirmation.location.address,
+          timestamp: confirmation.timestamp
+        };
+      }
+
+      // Update order status to delivered and add confirmation
+      await apiClient.updateOrder(selectedOrder.id, orderUpdates);
+
+      toast.success('Delivery confirmed and order location sent successfully!');
       await fetchOrders();
       setIsConfirmDialogOpen(false);
       setSelectedOrder(null);

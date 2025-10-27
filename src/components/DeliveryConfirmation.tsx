@@ -154,7 +154,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
         <DialogHeader>
           <DialogTitle>Confirm Delivery</DialogTitle>
           <DialogDescription>
-            Record delivery confirmation for order {orderNumber}
+            Record delivery confirmation for order {orderNumber}. The delivery location will be sent with the order.
           </DialogDescription>
         </DialogHeader>
 
@@ -163,12 +163,12 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
           <div>
             <Label className="flex items-center gap-2 mb-2">
               <MapPin className="w-4 h-4" />
-              Delivery Location
+              Order Delivery Location
             </Label>
             {location ? (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-800">
-                  <strong>Location:</strong> {location.address}
+                  <strong>Delivery Location:</strong> {location.address}
                 </p>
                 <p className="text-xs text-green-600 mt-1">
                   Lat: {location.latitude.toFixed(6)}, Lng: {location.longitude.toFixed(6)}
@@ -183,7 +183,7 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
                 className="w-full"
               >
                 <MapPin className="w-4 h-4 mr-2" />
-                {capturingLocation ? 'Capturing Location...' : 'Capture GPS Location'}
+                {capturingLocation ? 'Capturing Location...' : 'Capture Delivery Location'}
               </Button>
             )}
           </div>
