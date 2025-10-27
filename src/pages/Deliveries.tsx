@@ -115,21 +115,21 @@ const Deliveries: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">My Deliveries</h1>
-        <p className="text-sm text-gray-600 mt-1">View and manage your assigned delivery orders</p>
+        <h1 className="text-2xl font-bold text-gray-900">My Delivery Orders</h1>
+        <p className="text-sm text-gray-600 mt-1">View and manage orders assigned to you for delivery</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Total Orders</CardDescription>
+            <CardDescription>My Assigned Orders</CardDescription>
             <CardTitle className="text-3xl">{orders.length}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Pending Delivery</CardDescription>
+            <CardDescription>Ready for Delivery</CardDescription>
             <CardTitle className="text-3xl">
               {orders.filter(o => o.status === 'shipped').length}
             </CardTitle>
@@ -137,7 +137,7 @@ const Deliveries: React.FC = () => {
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Completed</CardDescription>
+            <CardDescription>Delivered</CardDescription>
             <CardTitle className="text-3xl">
               {orders.filter(o => o.status === 'delivered').length}
             </CardTitle>
@@ -150,8 +150,8 @@ const Deliveries: React.FC = () => {
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <div>
-              <CardTitle>Orders</CardTitle>
-              <CardDescription>Your assigned delivery orders</CardDescription>
+              <CardTitle>My Delivery Orders</CardTitle>
+              <CardDescription>Orders assigned to you for delivery</CardDescription>
             </div>
             <div className="flex gap-2">
               <div className="relative">

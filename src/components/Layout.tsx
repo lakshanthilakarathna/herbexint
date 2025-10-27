@@ -122,8 +122,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       }
       // Check permission for items that require it
       return hasPermission(item.permission);
+    }).map(item => {
+      // Customize titles for delivery personnel
+      if (item.href === '/deliveries' && user?.role_id === 'delivery-role-id') {
+        return {
+          ...item,
+          title: 'My Deliveries'
+        };
+      }
+      return item;
     });
-  }, [user?.permissions]);
+  }, [user?.permissions, user?.role_id]);
 
   const handleLogout = () => {
     logout();

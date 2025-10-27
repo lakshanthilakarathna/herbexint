@@ -173,7 +173,6 @@ const Users: React.FC = () => {
       const roleId = isDeliveryPerson ? 'delivery-role-id' : 'sales-rep-role-id';
       const roleName = isDeliveryPerson ? 'Delivery Personnel' : 'Sales Representative';
       const permissions = isDeliveryPerson ? [
-        'orders:read',
         'deliveries:read',
         'deliveries:write'
       ] : [
@@ -408,7 +407,7 @@ const Users: React.FC = () => {
                   </p>
                   {newUser.role === 'delivery' ? (
                     <p className={`text-xs text-${newUser.role === 'delivery' ? 'green' : 'blue'}-600 mt-1`}>
-                      Can view assigned orders and confirm deliveries with GPS location, photo, and signature
+                      Can view assigned deliveries and confirm deliveries with GPS location, photo, and notes
                     </p>
                   ) : (
                     <>
