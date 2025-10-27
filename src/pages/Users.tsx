@@ -99,24 +99,6 @@ const Users: React.FC = () => {
           status: 'active',
           created_at: '2025-10-01T00:00:00Z',
           updated_at: '2025-10-01T00:00:00Z'
-        },
-        {
-          id: 'sales-rep-2',
-          name: 'Sales Rep 2',
-          username: 'sales2',
-          email: 'sales2@herb.com',
-          phone: '+94 77 123 4567',
-          role_id: 'sales-rep-role-id',
-          role_name: 'Sales Representative',
-          permissions: [
-            'orders:read', 'orders:write',
-            'customers:read', 'customers:write',
-            'products:read',
-            'visits:read', 'visits:write', 'visits:delete'
-          ],
-          status: 'active',
-          created_at: '2025-10-02T00:00:00Z',
-          updated_at: '2025-10-02T00:00:00Z'
         }
       ];
 
