@@ -804,7 +804,7 @@ const Orders: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: Order['status']) => {
+  const getStatusBadge = (status: Order['status'], order?: Order) => {
     const statusConfig = {
       pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' },
       approved: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle, label: 'Approved' },
@@ -815,10 +815,19 @@ const Orders: React.FC = () => {
     const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
     
+    // Add lock indicator for sales reps when order is not pending
+    const isLocked = order && 
+                    user?.role_id !== 'admin-role-id' && 
+                    order.created_by === user?.id && 
+                    status !== 'pending';
+    
     return (
       <Badge className={config.color}>
         <Icon className="w-3 h-3 mr-1" />
         {config.label}
+        {isLocked && (
+          <span className="ml-1" title="Order locked - Admin approval required">🔒</span>
+        )}
       </Badge>
     );
   };
@@ -1312,7 +1321,7 @@ const Orders: React.FC = () => {
                   </TableCell>
                   <TableCell>{order.customer_name || 'Customer'}</TableCell>
                   <TableCell>Rs. {(order.total_amount || 0).toFixed(2)}</TableCell>
-                  <TableCell>{getStatusBadge(order.status)}</TableCell>
+                  <TableCell>{getStatusBadge(order.status, order)}</TableCell>
                   <TableCell>{new Date(order.order_date).toLocaleDateString()}</TableCell>
                   <TableCell>{order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'N/A'}</TableCell>
                   <TableCell>
@@ -1344,13 +1353,31 @@ const Orders: React.FC = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      {/* Sales Reps can edit their own orders, Admin can edit all orders */}
-                      {hasPermission('orders:write') && (user?.role_id === 'admin-role-id' || order.created_by === user?.id) && (
+                      {/* Sales Reps can edit only pending orders, Admin can edit all orders */}
+                      {hasPermission('orders:write') && (
+                        (user?.role_id === 'admin-role-id') || 
+                        (order.created_by === user?.id && order.status === 'pending')
+                      ) && (
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleEditOrder(order)}
                           title="Edit Order"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {/* Show locked indicator for sales reps when order is not pending */}
+                      {hasPermission('orders:write') && 
+                       user?.role_id !== 'admin-role-id' && 
+                       order.created_by === user?.id && 
+                       order.status !== 'pending' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled
+                          title="Order locked - Admin approval required"
+                          className="opacity-50"
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -1419,7 +1446,7 @@ const Orders: React.FC = () => {
                 </div>
                 <div>
                   <Label>Status</Label>
-                  <div>{getStatusBadge(selectedOrder.status)}</div>
+                  <div>{getStatusBadge(selectedOrder.status, selectedOrder)}</div>
                 </div>
               </div>
               
