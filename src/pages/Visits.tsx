@@ -579,6 +579,11 @@ const Visits: React.FC = () => {
               <CardTitle>Visit Tracking</CardTitle>
               <CardDescription>
                 Track sales representative visits to customers
+                {user?.role_id !== 'admin-role-id' && (
+                  <span className="block text-blue-600 mt-1">
+                    💡 Only sales reps can confirm their own visits
+                  </span>
+                )}
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -699,7 +704,7 @@ const Visits: React.FC = () => {
                           Edit
                         </Button>
                       )}
-                      {(!visit.check_out_time && visit.sales_rep_id === user?.id) || (!visit.check_out_time && user?.role_id === 'admin-role-id') && (
+                      {!visit.check_out_time && visit.sales_rep_id === user?.id && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -782,7 +787,7 @@ const Visits: React.FC = () => {
                             <Edit className="w-4 h-4" />
                           </Button>
                         )}
-                        {(!visit.check_out_time && visit.sales_rep_id === user?.id) || (!visit.check_out_time && user?.role_id === 'admin-role-id') && (
+                        {!visit.check_out_time && visit.sales_rep_id === user?.id && (
                           <Button 
                             variant="outline" 
                             size="sm"
