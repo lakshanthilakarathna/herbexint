@@ -1,12 +1,22 @@
 // Simple Node.js Backend for HERB Liquor Wholesale Management System
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
+const compression = require('compression');
+const fs = require('fs').promises; // Use async file operations
+const fsSync = require('fs'); // Keep sync for initial setup
 const path = require('path');
 const { generateAdminOrderNumber, generateSalesRepOrderNumber, generateCustomerPortalOrderNumber } = require('./orderNumberGenerator');
 
+// Performance optimizations
+let dataCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5000; // 5 seconds cache
+
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Middleware - Performance optimizations
+app.use(compression()); // Enable gzip compression
 
 // Middleware - Enhanced CORS configuration
 app.use(cors({
@@ -41,23 +51,49 @@ if (!fs.existsSync(dataFile)) {
   fs.writeFileSync(dataFile, JSON.stringify(initialData, null, 2));
 }
 
-// Helper function to read data
-function readData() {
+// Helper function to read data with caching
+async function readData() {
+  const now = Date.now();
+  
+  // Return cached data if still valid
+  if (dataCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    return dataCache;
+  }
+  
   try {
-    const data = fs.readFileSync(dataFile, 'utf8');
+    const data = await fs.readFile(dataFile, 'utf8');
+    dataCache = JSON.parse(data);
+    cacheTimestamp = now;
+    return dataCache;
+  } catch (error) {
+    console.error('Error reading data:', error);
+    const fallbackData = { products: [], customers: [], orders: [], users: [], visits: [], customer_portals: [], customer_orders: [], system_logs: [] };
+    dataCache = fallbackData;
+    cacheTimestamp = now;
+    return fallbackData;
+  }
+}
+
+// Helper function to write data and invalidate cache
+async function writeData(data) {
+  try {
+    await fs.writeFile(dataFile, JSON.stringify(data, null, 2));
+    // Update cache
+    dataCache = data;
+    cacheTimestamp = Date.now();
+  } catch (error) {
+    console.error('Error writing data:', error);
+  }
+}
+
+// Sync version for initial setup
+function readDataSync() {
+  try {
+    const data = fsSync.readFileSync(dataFile, 'utf8');
     return JSON.parse(data);
   } catch (error) {
     console.error('Error reading data:', error);
     return { products: [], customers: [], orders: [], users: [], visits: [], customer_portals: [], customer_orders: [], system_logs: [] };
-  }
-}
-
-// Helper function to write data
-function writeData(data) {
-  try {
-    fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
-  } catch (error) {
-    console.error('Error writing data:', error);
   }
 }
 
@@ -67,20 +103,20 @@ function generateId() {
 }
 
 // PRODUCTS API
-app.get('/api/products', (req, res) => {
-  const data = readData();
+app.get('/api/products', async (req, res) => {
+  const data = await readData();
   res.json(data.products);
 });
 
-app.get('/api/products/:id', (req, res) => {
-  const data = readData();
+app.get('/api/products/:id', async (req, res) => {
+  const data = await readData();
   const product = data.products.find(p => p.id === req.params.id);
   if (!product) return res.status(404).json({ message: 'Product not found' });
   res.json(product);
 });
 
-app.post('/api/products', (req, res) => {
-  const data = readData();
+app.post('/api/products', async (req, res) => {
+  const data = await readData();
   const product = {
     ...req.body,
     id: req.body.id || generateId(),
@@ -88,12 +124,12 @@ app.post('/api/products', (req, res) => {
     updated_at: new Date().toISOString()
   };
   data.products.push(product);
-  writeData(data);
+  await await writeData(data);
   res.json(product);
 });
 
-app.put('/api/products/:id', (req, res) => {
-  const data = readData();
+app.put('/api/products/:id', async (req, res) => {
+  const data = await readData();
   const index = data.products.findIndex(p => p.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Product not found' });
   
@@ -103,35 +139,35 @@ app.put('/api/products/:id', (req, res) => {
     id: req.params.id,
     updated_at: new Date().toISOString()
   };
-  writeData(data);
+  await await writeData(data);
   res.json(data.products[index]);
 });
 
-app.delete('/api/products/:id', (req, res) => {
-  const data = readData();
+app.delete('/api/products/:id', async (req, res) => {
+  const data = await readData();
   const index = data.products.findIndex(p => p.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Product not found' });
   
   data.products.splice(index, 1);
-  writeData(data);
+  await await writeData(data);
   res.json({ message: 'Product deleted' });
 });
 
 // CUSTOMERS API
-app.get('/api/customers', (req, res) => {
-  const data = readData();
+app.get('/api/customers', async (req, res) => {
+  const data = await readData();
   res.json(data.customers);
 });
 
-app.get('/api/customers/:id', (req, res) => {
-  const data = readData();
+app.get('/api/customers/:id', async (req, res) => {
+  const data = await readData();
   const customer = data.customers.find(c => c.id === req.params.id);
   if (!customer) return res.status(404).json({ message: 'Customer not found' });
   res.json(customer);
 });
 
-app.post('/api/customers', (req, res) => {
-  const data = readData();
+app.post('/api/customers', async (req, res) => {
+  const data = await readData();
   const customer = {
     ...req.body,
     id: req.body.id || generateId(),
@@ -139,12 +175,12 @@ app.post('/api/customers', (req, res) => {
     updated_at: new Date().toISOString()
   };
   data.customers.push(customer);
-  writeData(data);
+  await await writeData(data);
   res.json(customer);
 });
 
-app.put('/api/customers/:id', (req, res) => {
-  const data = readData();
+app.put('/api/customers/:id', async (req, res) => {
+  const data = await readData();
   const index = data.customers.findIndex(c => c.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Customer not found' });
   
@@ -154,23 +190,23 @@ app.put('/api/customers/:id', (req, res) => {
     id: req.params.id,
     updated_at: new Date().toISOString()
   };
-  writeData(data);
+  await await writeData(data);
   res.json(data.customers[index]);
 });
 
-app.delete('/api/customers/:id', (req, res) => {
-  const data = readData();
+app.delete('/api/customers/:id', async (req, res) => {
+  const data = await readData();
   const index = data.customers.findIndex(c => c.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Customer not found' });
   
   data.customers.splice(index, 1);
-  writeData(data);
+  await await writeData(data);
   res.json({ message: 'Customer deleted' });
 });
 
 // ORDERS API
-app.get('/api/orders', (req, res) => {
-  const data = readData();
+app.get('/api/orders', async (req, res) => {
+  const data = await readData();
   res.json(data.orders);
 });
 
@@ -180,8 +216,8 @@ app.get('/api/test', (req, res) => {
 });
 
 // Get all orders (including customer portal orders) for reports
-app.get('/api/orders-complete', (req, res) => {
-  const data = readData();
+app.get('/api/orders-complete', async (req, res) => {
+  const data = await readData();
   const allOrders = [
     ...(data.orders || []),
     ...(data.customer_orders || []).map(co => ({
@@ -194,15 +230,15 @@ app.get('/api/orders-complete', (req, res) => {
   res.json(allOrders);
 });
 
-app.get('/api/orders/:id', (req, res) => {
-  const data = readData();
+app.get('/api/orders/:id', async (req, res) => {
+  const data = await readData();
   const order = data.orders.find(o => o.id === req.params.id);
   if (!order) return res.status(404).json({ message: 'Order not found' });
   res.json(order);
 });
 
-app.post('/api/orders', (req, res) => {
-  const data = readData();
+app.post('/api/orders', async (req, res) => {
+  const data = await readData();
   
   // Generate order number based on created_by field
   let orderNumber;
@@ -223,12 +259,12 @@ app.post('/api/orders', (req, res) => {
     updated_at: new Date().toISOString()
   };
   data.orders.push(order);
-  writeData(data);
+  await await writeData(data);
   res.json(order);
 });
 
-app.put('/api/orders/:id', (req, res) => {
-  const data = readData();
+app.put("/api/orders/:id", async (req, res) => {
+  const data = await readData();
   if (!data.orders) data.orders = [];
   if (!data.customer_orders) data.customer_orders = [];
   
@@ -253,35 +289,35 @@ app.put('/api/orders/:id', (req, res) => {
     };
   }
   
-  writeData(data);
+  await writeData(data);
   res.json(data.orders[index]);
 });
 
-app.delete('/api/orders/:id', (req, res) => {
-  const data = readData();
+app.delete("/api/orders/:id", async (req, res) => {
+  const data = await readData();
   const index = data.orders.findIndex(o => o.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Order not found' });
   
   data.orders.splice(index, 1);
-  writeData(data);
+  await writeData(data);
   res.json({ message: 'Order deleted' });
 });
 
 // USERS API
-app.get('/api/users', (req, res) => {
-  const data = readData();
+app.get("/api/users", async (req, res) => {
+  const data = await readData();
   res.json(data.users);
 });
 
-app.get('/api/users/:id', (req, res) => {
-  const data = readData();
+app.get("/api/users", async (req, res) => {
+  const data = await readData();
   const user = data.users.find(u => u.id === req.params.id);
   if (!user) return res.status(404).json({ message: 'User not found' });
   res.json(user);
 });
 
-app.post('/api/users', (req, res) => {
-  const data = readData();
+app.post("/api/users", async (req, res) => {
+  const data = await readData();
   const user = {
     ...req.body,
     id: req.body.id || generateId(),
@@ -289,12 +325,12 @@ app.post('/api/users', (req, res) => {
     updated_at: new Date().toISOString()
   };
   data.users.push(user);
-  writeData(data);
+  await writeData(data);
   res.json(user);
 });
 
-app.put('/api/users/:id', (req, res) => {
-  const data = readData();
+app.put("/api/users/:id", async (req, res) => {
+  const data = await readData();
   const index = data.users.findIndex(u => u.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'User not found' });
   
@@ -304,35 +340,35 @@ app.put('/api/users/:id', (req, res) => {
     id: req.params.id,
     updated_at: new Date().toISOString()
   };
-  writeData(data);
+  await writeData(data);
   res.json(data.users[index]);
 });
 
-app.delete('/api/users/:id', (req, res) => {
-  const data = readData();
+app.delete("/api/users/:id", async (req, res) => {
+  const data = await readData();
   const index = data.users.findIndex(u => u.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'User not found' });
   
   data.users.splice(index, 1);
-  writeData(data);
+  await writeData(data);
   res.json({ message: 'User deleted' });
 });
 
 // VISITS API
 app.get('/api/visits', (req, res) => {
-  const data = readData();
+  const data = await readData();
   res.json(data.visits || []);
 });
 
 app.get('/api/visits/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   const visit = data.visits?.find(v => v.id === req.params.id);
   if (!visit) return res.status(404).json({ message: 'Visit not found' });
   res.json(visit);
 });
 
 app.post('/api/visits', (req, res) => {
-  const data = readData();
+  const data = await readData();
   const visit = {
     ...req.body,
     id: req.body.id || generateId(),
@@ -341,12 +377,12 @@ app.post('/api/visits', (req, res) => {
   };
   if (!data.visits) data.visits = [];
   data.visits.push(visit);
-  writeData(data);
+  await writeData(data);
   res.json(visit);
 });
 
 app.put('/api/visits/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.visits) data.visits = [];
   const index = data.visits.findIndex(v => v.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Visit not found' });
@@ -357,29 +393,29 @@ app.put('/api/visits/:id', (req, res) => {
     id: req.params.id,
     updated_at: new Date().toISOString()
   };
-  writeData(data);
+  await writeData(data);
   res.json(data.visits[index]);
 });
 
 app.delete('/api/visits/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.visits) data.visits = [];
   const index = data.visits.findIndex(v => v.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Visit not found' });
   
   data.visits.splice(index, 1);
-  writeData(data);
+  await writeData(data);
   res.json({ message: 'Visit deleted' });
 });
 
 // LOGS API
 app.get('/api/logs', (req, res) => {
-  const data = readData();
+  const data = await readData();
   res.json(data.system_logs || []);
 });
 
 app.post('/api/logs', (req, res) => {
-  const data = readData();
+  const data = await readData();
   const log = {
     ...req.body,
     id: generateId(),
@@ -387,25 +423,25 @@ app.post('/api/logs', (req, res) => {
   };
   if (!data.system_logs) data.system_logs = [];
   data.system_logs.push(log);
-  writeData(data);
+  await writeData(data);
   res.json(log);
 });
 
 // SYSTEM LOGS API (alternative endpoint)
 app.get('/api/system-logs', (req, res) => {
-  const data = readData();
+  const data = await readData();
   res.json(data.system_logs || []);
 });
 
 app.get('/api/system-logs/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   const log = data.system_logs?.find(l => l.id === req.params.id);
   if (!log) return res.status(404).json({ message: 'System log not found' });
   res.json(log);
 });
 
 app.post('/api/system-logs', (req, res) => {
-  const data = readData();
+  const data = await readData();
   const log = {
     ...req.body,
     id: req.body.id || generateId(),
@@ -414,12 +450,12 @@ app.post('/api/system-logs', (req, res) => {
   };
   if (!data.system_logs) data.system_logs = [];
   data.system_logs.push(log);
-  writeData(data);
+  await writeData(data);
   res.json(log);
 });
 
 app.put('/api/system-logs/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.system_logs) data.system_logs = [];
   const index = data.system_logs.findIndex(l => l.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'System log not found' });
@@ -430,29 +466,29 @@ app.put('/api/system-logs/:id', (req, res) => {
     id: req.params.id,
     updated_at: new Date().toISOString()
   };
-  writeData(data);
+  await writeData(data);
   res.json(data.system_logs[index]);
 });
 
 app.delete('/api/system-logs/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.system_logs) data.system_logs = [];
   const index = data.system_logs.findIndex(l => l.id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'System log not found' });
   
   data.system_logs.splice(index, 1);
-  writeData(data);
+  await writeData(data);
   res.json({ message: 'System log deleted' });
 });
 
 // CUSTOMER PORTALS API
 app.get('/api/customer-portals', (req, res) => {
-  const data = readData();
+  const data = await readData();
   res.json(data.customer_portals || []);
 });
 
 app.get('/api/customer-portals/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   // Search by both id and unique_url
   const portal = data.customer_portals?.find(p => 
     p.id === req.params.id || p.unique_url === req.params.id
@@ -462,7 +498,7 @@ app.get('/api/customer-portals/:id', (req, res) => {
 });
 
 app.post('/api/customer-portals', (req, res) => {
-  const data = readData();
+  const data = await readData();
   const portal = {
     ...req.body,
     id: req.body.id || generateId(),
@@ -471,12 +507,12 @@ app.post('/api/customer-portals', (req, res) => {
   };
   if (!data.customer_portals) data.customer_portals = [];
   data.customer_portals.push(portal);
-  writeData(data);
+  await writeData(data);
   res.json(portal);
 });
 
 app.put('/api/customer-portals/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_portals) data.customer_portals = [];
   // Search by both id and unique_url
   const index = data.customer_portals.findIndex(p => 
@@ -490,12 +526,12 @@ app.put('/api/customer-portals/:id', (req, res) => {
     id: data.customer_portals[index].id, // Keep original ID
     updated_at: new Date().toISOString()
   };
-  writeData(data);
+  await writeData(data);
   res.json(data.customer_portals[index]);
 });
 
 app.delete('/api/customer-portals/:id', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_portals) data.customer_portals = [];
   // Search by both id and unique_url
   const index = data.customer_portals.findIndex(p => 
@@ -504,20 +540,20 @@ app.delete('/api/customer-portals/:id', (req, res) => {
   if (index === -1) return res.status(404).json({ message: 'Customer portal not found' });
   
   data.customer_portals.splice(index, 1);
-  writeData(data);
+  await writeData(data);
   res.json({ message: 'Customer portal deleted' });
 });
 
 // CUSTOMER PORTAL ORDERS API
 app.get('/api/customer-portals/:portalId/orders', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_orders) data.customer_orders = [];
   const portalOrders = data.customer_orders.filter(order => order.portal_id === req.params.portalId);
   res.json(portalOrders);
 });
 
 app.post('/api/customer-portals/:portalId/orders', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_orders) data.customer_orders = [];
   if (!data.orders) data.orders = [];
   if (!data.customer_portals) data.customer_portals = [];
@@ -627,12 +663,12 @@ app.post('/api/customer-portals/:portalId/orders', (req, res) => {
     portal.updated_at = new Date().toISOString();
   }
   
-  writeData(data);
+  await writeData(data);
   res.json(order);
 });
 
 app.get('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_orders) data.customer_orders = [];
   const order = data.customer_orders.find(o => 
     o.id === req.params.orderId && o.portal_id === req.params.portalId
@@ -642,7 +678,7 @@ app.get('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
 });
 
 app.put('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_orders) data.customer_orders = [];
   if (!data.orders) data.orders = [];
   if (!data.customer_portals) data.customer_portals = [];
@@ -688,12 +724,12 @@ app.put('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
     portal.updated_at = new Date().toISOString();
   }
   
-  writeData(data);
+  await writeData(data);
   res.json(data.customer_orders[index]);
 });
 
 app.delete('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_orders) data.customer_orders = [];
   if (!data.orders) data.orders = [];
   if (!data.customer_portals) data.customer_portals = [];
@@ -747,13 +783,13 @@ app.delete('/api/customer-portals/:portalId/orders/:orderId', (req, res) => {
     portal.updated_at = new Date().toISOString();
   }
   
-  writeData(data);
+  await writeData(data);
   res.json({ message: 'Customer order deleted' });
 });
 
 // Update order status specifically (with sync)
 app.patch('/api/orders/:id/status', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.orders) data.orders = [];
   if (!data.customer_orders) data.customer_orders = [];
   
@@ -799,13 +835,13 @@ app.patch('/api/orders/:id/status', (req, res) => {
     console.log(`📋 Available customer order IDs:`, data.customer_orders.map(co => co.id));
   }
   
-  writeData(data);
+  await writeData(data);
   res.json(data.orders[index]);
 });
 
 // Update customer portal order status specifically (with sync)
 app.patch('/api/customer-portals/:portalId/orders/:orderId/status', (req, res) => {
-  const data = readData();
+  const data = await readData();
   if (!data.customer_orders) data.customer_orders = [];
   if (!data.orders) data.orders = [];
   
@@ -834,7 +870,7 @@ app.patch('/api/customer-portals/:portalId/orders/:orderId/status', (req, res) =
     };
   }
   
-  writeData(data);
+  await writeData(data);
   res.json(data.customer_orders[index]);
 });
 

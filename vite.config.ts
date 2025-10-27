@@ -17,4 +17,26 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     force: true,
   },
+  build: {
+    // Performance optimizations
+    target: 'esnext',
+    minify: 'esbuild', // Use esbuild instead of terser
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor libraries
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          charts: ['recharts'],
+          utils: ['date-fns', 'lucide-react'],
+        },
+      },
+    },
+    // Enable compression
+    chunkSizeWarningLimit: 1000,
+  },
+  // Enable gzip compression
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(mode),
+  },
 }));
