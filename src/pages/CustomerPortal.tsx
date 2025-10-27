@@ -397,7 +397,7 @@ const CustomerPortal: React.FC = () => {
       cancelled: { color: 'bg-red-100 text-red-800', icon: Trash2, label: 'Cancelled' }
     };
     
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.pending; // Default to pending if status is undefined
     const Icon = config.icon;
     
     return (

@@ -474,6 +474,7 @@ app.post('/api/customer-portals/:portalId/orders', (req, res) => {
     ...req.body,
     id: req.body.id || generateId(),
     portal_id: req.params.portalId,
+    status: req.body.status || 'pending', // Default status
     created_at: req.body.created_at || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
