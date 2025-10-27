@@ -266,14 +266,6 @@ const Orders: React.FC = () => {
           role_name: 'Sales Representative',
           status: 'active'
         },
-        {
-          id: 'sales-rep-2',
-          name: 'Sales Rep 2',
-          email: 'sales2@herb.com',
-          role_id: 'sales-rep-role-id',
-          role_name: 'Sales Representative',
-          status: 'active'
-        }
       ];
 
       // Combine database users with default users (remove duplicates by ID)
@@ -297,8 +289,7 @@ const Orders: React.FC = () => {
       // Fallback to default users only
       setUsers([
         { id: 'admin-user-id', name: 'Admin User', email: 'admin@herb.com', role_id: 'admin-role-id', role_name: 'System Administrator', status: 'active' },
-        { id: 'sales-rep-1', name: 'Sales Rep 1', email: 'sales1@herb.com', role_id: 'sales-rep-role-id', role_name: 'Sales Representative', status: 'active' },
-        { id: 'sales-rep-2', name: 'Sales Rep 2', email: 'sales2@herb.com', role_id: 'sales-rep-role-id', role_name: 'Sales Representative', status: 'active' }
+        { id: 'sales-rep-1', name: 'Sales Rep 1', email: 'sales1@herb.com', role_id: 'sales-rep-role-id', role_name: 'Sales Representative', status: 'active' }
       ]);
     }
   };

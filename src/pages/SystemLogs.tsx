@@ -135,7 +135,6 @@ const SystemLogs: React.FC = () => {
     if (userId === 'customer-portal') return 'Customer';
     if (userId === 'admin-user-id') return 'Admin User';
     if (userId === 'sales-rep-1') return 'Sanjaya';
-    if (userId === 'sales-rep-2') return 'Hashan';
     if (userId === 'sales-rep-3') return 'Madhawa';
     if (userId === 'sales-rep-4') return 'Wajira';
     if (userId === 'legacy-sales-rep') return 'Legacy Sales Rep';
@@ -147,7 +146,6 @@ const SystemLogs: React.FC = () => {
     if (userId === 'customer-portal') return 'customer@portal';
     if (userId === 'admin-user-id') return 'admin@herb.com';
     if (userId === 'sales-rep-1') return 'sales1@herb.com';
-    if (userId === 'sales-rep-2') return 'sales2@herb.com';
     return 'unknown@system';
   };
 

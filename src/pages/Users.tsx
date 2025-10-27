@@ -217,7 +217,7 @@ const Users: React.FC = () => {
   const handleDeleteUser = async (userId: string) => {
     try {
       // Prevent deleting admin and default sales reps
-      const defaultUserIds = ['admin-user-id', 'sales-rep-1', 'sales-rep-2'];
+      const defaultUserIds = ['admin-user-id', 'sales-rep-1'];
       if (defaultUserIds.includes(userId)) {
         toast.error('Cannot delete default users');
         return;
@@ -258,7 +258,7 @@ const Users: React.FC = () => {
         return;
       }
 
-      const defaultUserIds = ['admin-user-id', 'sales-rep-1', 'sales-rep-2'];
+      const defaultUserIds = ['admin-user-id', 'sales-rep-1'];
       if (selectedUser && defaultUserIds.includes(selectedUser.id)) {
         toast.error('Cannot edit default users');
         return;

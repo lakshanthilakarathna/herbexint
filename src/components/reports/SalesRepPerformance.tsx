@@ -12,8 +12,7 @@ interface SalesRepPerformanceProps {
 export const SalesRepPerformance: React.FC<SalesRepPerformanceProps> = ({ orders, dateRange }) => {
   const [allReps, setAllReps] = useState([
     { id: 'admin-user-id', name: 'Admin User' },
-    { id: 'sales-rep-1', name: 'Sales Rep 1' },
-    { id: 'sales-rep-2', name: 'Sales Rep 2' }
+    { id: 'sales-rep-1', name: 'Sales Rep 1' }
   ]);
 
   useEffect(() => {
@@ -29,8 +28,7 @@ export const SalesRepPerformance: React.FC<SalesRepPerformanceProps> = ({ orders
         // Default sales reps
         const defaultReps = [
           { id: 'admin-user-id', name: 'Admin User' },
-          { id: 'sales-rep-1', name: 'Sales Rep 1' },
-          { id: 'sales-rep-2', name: 'Sales Rep 2' }
+          { id: 'sales-rep-1', name: 'Sales Rep 1' }
         ];
 
         // Combine default and dynamic reps
