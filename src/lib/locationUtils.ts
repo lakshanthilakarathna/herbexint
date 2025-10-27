@@ -105,7 +105,23 @@ export const getCurrentLocation = (options: LocationOptions = {}): Promise<Locat
       },
       (error) => {
         console.log('❌ Geolocation failed:', error.message);
-        reject(new Error(error.message));
+        let userMessage = 'GPS location failed';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            userMessage = 'Location access denied. Please allow location access in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            userMessage = 'Location unavailable. Please check your GPS signal and try again.';
+            break;
+          case error.TIMEOUT:
+            userMessage = 'Location request timed out. Please try again.';
+            break;
+          default:
+            userMessage = `GPS error: ${error.message}`;
+        }
+        
+        reject(new Error(userMessage));
       },
       opts
     );
@@ -125,7 +141,7 @@ export const getLocationWithFallback = async (options: LocationOptions = {}): Pr
                    window.location.hostname === '127.0.0.1';
   
   if (!isSecure) {
-    throw new Error('GPS location requires HTTPS. Your site is now HTTPS enabled, please refresh and try again.');
+    throw new Error('GPS requires HTTPS. Please ensure you\'re using a secure connection (https://) or localhost.');
   }
   
   // Try GPS with high accuracy first

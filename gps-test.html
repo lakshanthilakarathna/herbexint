@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>GPS Location Test</h1>
+    
+    <div class="test-section">
+        <h3>Browser Support Check</h3>
+        <div id="browser-support"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>HTTPS Check</h3>
+        <div id="https-check"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Permission Check</h3>
+        <div id="permission-check"></div>
+        <button onclick="checkPermissions()">Check Permissions</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Location Test</h3>
+        <div id="location-result"></div>
+        <button onclick="testLocation()">Test Location</button>
+        <button onclick="testLocationHighAccuracy()">Test High Accuracy</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Console Logs</h3>
+        <div id="console-logs"></div>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push(`[${timestamp}] ${message}`);
+            updateConsoleLogs();
+            console.log(message);
+        }
+        
+        function updateConsoleLogs() {
+            document.getElementById('console-logs').innerHTML = '<pre>' + logs.join('\n') + '</pre>';
+        }
+        
+        function clearLogs() {
+            logs = [];
+            updateConsoleLogs();
+        }
+        
+        // Browser support check
+        function checkBrowserSupport() {
+            const supportDiv = document.getElementById('browser-support');
+            if (navigator.geolocation) {
+                supportDiv.innerHTML = '<div class="success">✅ Geolocation API is supported</div>';
+                log('Geolocation API is supported');
+            } else {
+                supportDiv.innerHTML = '<div class="error">❌ Geolocation API is not supported</div>';
+                log('Geolocation API is not supported', 'error');
+            }
+        }
+        
+        // HTTPS check
+        function checkHTTPS() {
+            const httpsDiv = document.getElementById('https-check');
+            const isSecure = window.location.protocol === 'https:' || 
+                           window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
+            
+            if (isSecure) {
+                httpsDiv.innerHTML = '<div class="success">✅ Secure context detected</div>';
+                log('Secure context detected');
+            } else {
+                httpsDiv.innerHTML = '<div class="warning">⚠️ Not a secure context - GPS may not work</div>';
+                log('Not a secure context - GPS may not work', 'warning');
+            }
+        }
+        
+        // Permission check
+        async function checkPermissions() {
+            const permissionDiv = document.getElementById('permission-check');
+            
+            if ('permissions' in navigator) {
+                try {
+                    const permission = await navigator.permissions.query({ name: 'geolocation' });
+                    log(`Permission state: ${permission.state}`);
+                    
+                    if (permission.state === 'granted') {
+                        permissionDiv.innerHTML = '<div class="success">✅ Location permission granted</div>';
+                    } else if (permission.state === 'denied') {
+                        permissionDiv.innerHTML = '<div class="error">❌ Location permission denied</div>';
+                    } else {
+                        permissionDiv.innerHTML = '<div class="warning">⚠️ Location permission prompt</div>';
+                    }
+                } catch (error) {
+                    permissionDiv.innerHTML = '<div class="warning">⚠️ Could not check permissions</div>';
+                    log(`Permission check error: ${error.message}`, 'error');
+                }
+            } else {
+                permissionDiv.innerHTML = '<div class="warning">⚠️ Permissions API not supported</div>';
+                log('Permissions API not supported', 'warning');
+            }
+        }
+        
+        // Location test
+        function testLocation() {
+            const resultDiv = document.getElementById('location-result');
+            resultDiv.innerHTML = '<div>Testing location...</div>';
+            log('Starting location test...');
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    const result = `✅ Location captured successfully!
+Latitude: ${latitude}
+Longitude: ${longitude}
+Accuracy: ${accuracy} meters
+Timestamp: ${new Date(position.timestamp).toLocaleString()}`;
+                    
+                    resultDiv.innerHTML = `<div class="success"><pre>${result}</pre></div>`;
+                    log(`Location captured: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`);
+                },
+                (error) => {
+                    let errorMsg = `❌ Location error: ${error.message}`;
+                    if (error.code === 1) errorMsg += ' (Permission denied)';
+                    else if (error.code === 2) errorMsg += ' (Position unavailable)';
+                    else if (error.code === 3) errorMsg += ' (Timeout)';
+                    
+                    resultDiv.innerHTML = `<div class="error"><pre>${errorMsg}</pre></div>`;
+                    log(`Location error: ${error.message} (code: ${error.code})`, 'error');
+                },
+                {
+                    enableHighAccuracy: false,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        }
+        
+        // High accuracy location test
+        function testLocationHighAccuracy() {
+            const resultDiv = document.getElementById('location-result');
+            resultDiv.innerHTML = '<div>Testing high accuracy location...</div>';
+            log('Starting high accuracy location test...');
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    const result = `✅ High accuracy location captured!
+Latitude: ${latitude}
+Longitude: ${longitude}
+Accuracy: ${accuracy} meters
+Timestamp: ${new Date(position.timestamp).toLocaleString()}`;
+                    
+                    resultDiv.innerHTML = `<div class="success"><pre>${result}</pre></div>`;
+                    log(`High accuracy location captured: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`);
+                },
+                (error) => {
+                    let errorMsg = `❌ High accuracy location error: ${error.message}`;
+                    if (error.code === 1) errorMsg += ' (Permission denied)';
+                    else if (error.code === 2) errorMsg += ' (Position unavailable)';
+                    else if (error.code === 3) errorMsg += ' (Timeout)';
+                    
+                    resultDiv.innerHTML = `<div class="error"><pre>${errorMsg}</pre></div>`;
+                    log(`High accuracy location error: ${error.message} (code: ${error.code})`, 'error');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+        }
+        
+        // Initialize tests
+        window.onload = function() {
+            checkBrowserSupport();
+            checkHTTPS();
+            checkPermissions();
+        };
+    </script>
+</body>
+</html>

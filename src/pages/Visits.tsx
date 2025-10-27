@@ -14,7 +14,7 @@ import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
+import { GPSStatus } from '@/components/GPSStatus';
 
 interface Visit {
   id: string;
@@ -162,8 +162,9 @@ const Visits: React.FC = () => {
         }
       } catch (locationError) {
         console.log('ℹ️ GPS location failed - visit will be created without location tracking:', locationError);
-        // Don't show error to user - just silently proceed without location
-        toast.info('Visit created without location tracking', { duration: 2000 });
+        // Show user-friendly error message
+        const errorMessage = locationError instanceof Error ? locationError.message : 'GPS location failed';
+        toast.error(`GPS Error: ${errorMessage}. Visit created without location.`, { duration: 5000 });
       }
 
 
@@ -338,7 +339,8 @@ const Visits: React.FC = () => {
         }
       } catch (locationError) {
         console.log('ℹ️ Location capture failed during visit confirmation:', locationError);
-        toast.info('Visit confirmed without location', { duration: 2000 });
+        const errorMessage = locationError instanceof Error ? locationError.message : 'GPS location failed';
+        toast.error(`GPS Error: ${errorMessage}. Visit confirmed without location.`, { duration: 5000 });
       }
 
       const updateData: any = {
@@ -584,6 +586,9 @@ const Visits: React.FC = () => {
                     💡 Only sales reps can confirm their own visits
                   </span>
                 )}
+                <div className="mt-2">
+                  <GPSStatus showTestButton={true} />
+                </div>
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
