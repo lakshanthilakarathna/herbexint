@@ -263,10 +263,38 @@ const Visits: React.FC = () => {
 
   const handleCheckOut = async (visitId: string) => {
     try {
-      const updated = await apiClient.updateVisit(visitId, {
+      // Capture location during check out
+      let locationData = undefined;
+      console.log('🌍 Capturing location for visit check out...');
+      
+      try {
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          toast.success(`Location captured: ${location.address}`, { duration: 3000 });
+          console.log('✅ Check out location captured:', locationData);
+        }
+      } catch (locationError) {
+        console.log('ℹ️ Location capture failed during check out:', locationError);
+        toast.info('Check out completed without location', { duration: 2000 });
+      }
+
+      const updateData: any = {
         check_out_time: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      });
+      };
+
+      // Add location data if captured
+      if (locationData) {
+        updateData.location = locationData;
+      }
+
+      const updated = await apiClient.updateVisit(visitId, updateData);
       
       const updatedVisits = visits.map(v => 
         v.id === visitId ? updated : v
@@ -618,7 +646,7 @@ const Visits: React.FC = () => {
                           onClick={() => handleCheckOut(visit.id)}
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
-                          Check Out
+                          Confirm Visit
                         </Button>
                       )}
                     </div>
@@ -698,7 +726,7 @@ const Visits: React.FC = () => {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleCheckOut(visit.id)}
-                            title="Check Out"
+                            title="Confirm Visit"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </Button>
