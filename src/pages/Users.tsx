@@ -155,6 +155,7 @@ const Users: React.FC = () => {
       const roleId = isDeliveryPerson ? 'delivery-role-id' : 'sales-rep-role-id';
       const roleName = isDeliveryPerson ? 'Delivery Personnel' : 'Sales Representative';
       const permissions = isDeliveryPerson ? [
+        'orders:read',
         'deliveries:read',
         'deliveries:write'
       ] : [
