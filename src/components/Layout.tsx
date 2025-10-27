@@ -253,23 +253,35 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       <div className="lg:pl-64">
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-          <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <div className="flex items-center">
+          <div className="flex items-center justify-between px-3 py-3 sm:px-6 lg:px-8">
+            <div className="flex items-center min-w-0 flex-1">
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden mr-2"
+                className="lg:hidden mr-2 flex-shrink-0"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              {title && <h1 className="text-2xl font-bold text-gray-900">{title}</h1>}
+              {title && (
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
+                  {title}
+                </h1>
+              )}
             </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+              <Button variant="ghost" size="sm" className="hidden sm:flex">
                 <Bell className="h-5 w-5" />
               </Button>
               <div className="flex items-center space-x-2">
+                {/* Mobile: Show user info and role in a compact way */}
+                <div className="text-right sm:hidden">
+                  <p className="text-xs font-medium text-gray-900 truncate max-w-[80px]">{user?.name}</p>
+                  <Badge variant={getRoleBadgeVariant(user?.role_id || '')} className="text-xs px-1 py-0 h-4">
+                    {getRoleDisplayName(user?.role_id || '').split(' ')[0]}
+                  </Badge>
+                </div>
+                {/* Desktop: Show full user info and role */}
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                   <Badge variant={getRoleBadgeVariant(user?.role_id || '')}>
