@@ -13,6 +13,7 @@ import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock, Package, TrendingUp, Star, MapPin } from 'lucide-react';
 import { generateAdminOrderNumber, generateSalesRepOrderNumber } from '@/lib/orderNumberGenerator';
+import { getLocationWithFallback } from '@/lib/locationUtils';
 
 interface Order {
   id: string;
