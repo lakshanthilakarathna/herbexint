@@ -42,85 +42,22 @@ const SystemLogs: React.FC = () => {
 
   const fetchLogs = async () => {
     try {
-      // For now, generate sample logs from actual user actions
-      // In production, these would be logged by the backend
-      const sampleLogs: SystemLog[] = [];
+      setLoading(true);
+      // Fetch real audit logs from API
+      const logsData = await apiClient.getSystemLogs();
       
-      // Get recent orders
-      const orders = await apiClient.getOrders();
-      orders.slice(0, 20).forEach((order: any) => {
-        sampleLogs.push({
-          id: `log-order-${order.id}`,
-          timestamp: order.created_at,
-          user_id: order.created_by || 'system',
-          user_name: getUserNameFromId(order.created_by),
-          user_email: getUserEmailFromId(order.created_by),
-          action: 'Created Order',
-          resource_type: 'order',
-          resource_id: order.order_number,
-          details: `Order ${order.order_number} for ${order.customer_name} - Rs. ${order.total_amount?.toFixed(2)}`,
-          status: 'success'
-        });
-
-        if (order.updated_at !== order.created_at) {
-          sampleLogs.push({
-            id: `log-order-update-${order.id}`,
-            timestamp: order.updated_at,
-            user_id: order.created_by || 'system',
-            user_name: getUserNameFromId(order.created_by),
-            user_email: getUserEmailFromId(order.created_by),
-            action: 'Updated Order',
-            resource_type: 'order',
-            resource_id: order.order_number,
-            details: `Modified order ${order.order_number} - Status: ${order.status}`,
-            status: 'success'
-          });
-        }
+      console.log('System Logs Debug:', {
+        logsCount: logsData.length,
+        sampleLog: logsData[0]
       });
-
-      // Get recent customers
-      const customers = await apiClient.getCustomers();
-      customers.slice(0, 10).forEach((customer: any) => {
-        sampleLogs.push({
-          id: `log-customer-${customer.id}`,
-          timestamp: customer.created_at,
-          user_id: 'admin-user-id',
-          user_name: 'Admin User',
-          user_email: 'admin@herb.com',
-          action: 'Created Customer',
-          resource_type: 'customer',
-          resource_id: customer.name,
-          details: `Added customer: ${customer.name}`,
-          status: 'success'
-        });
-      });
-
-      // Get recent products
-      const products = await apiClient.getProducts();
-      const actualProducts = products.filter((p: any) => 
-        p.category !== '__customer_portal__' && p.category !== '__shared_catalog__'
-      ).slice(0, 10);
       
-      actualProducts.forEach((product: any) => {
-        sampleLogs.push({
-          id: `log-product-${product.id}`,
-          timestamp: product.created_at,
-          user_id: 'admin-user-id',
-          user_name: 'Admin User',
-          user_email: 'admin@herb.com',
-          action: 'Created Product',
-          resource_type: 'product',
-          resource_id: product.product_name,
-          details: `Added product: ${product.brand_name} ${product.product_name}`,
-          status: 'success'
-        });
-      });
-
       // Sort by timestamp (most recent first)
-      sampleLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const sortedLogs = logsData.sort((a: any, b: any) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
       
-      setLogs(sampleLogs.slice(0, 100)); // Show last 100 logs
-      console.log('Loaded system logs:', sampleLogs.length);
+      setLogs(sortedLogs);
+      console.log('Loaded system logs:', sortedLogs.length);
     } catch (error) {
       console.error('Error fetching logs:', error);
       toast.error('Failed to load system logs');

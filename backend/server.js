@@ -47,6 +47,9 @@ app.use(cors({
   credentials: true
 }));
 
+// Apply audit logging middleware to all API routes
+app.use('/api', logAuditEvent);
+
 // Handle OPTIONS requests
 app.options('*', cors());
 
@@ -121,6 +124,142 @@ function readDataSync() {
 // Helper function to generate ID
 function generateId() {
   return 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+}
+
+// Audit logging middleware
+async function logAuditEvent(req, res, next) {
+  const originalSend = res.send;
+  
+  res.send = function(data) {
+    // Log the audit event after response is sent
+    logUserActivity(req, res, data);
+    return originalSend.call(this, data);
+  };
+  
+  next();
+}
+
+// Function to log user activity
+async function logUserActivity(req, res, responseData) {
+  try {
+    const data = await readData();
+    if (!data.system_logs) data.system_logs = [];
+    
+    // Extract user information from request headers or body
+    const userId = req.headers['x-user-id'] || req.body?.user_id || 'system';
+    const userName = req.headers['x-user-name'] || req.body?.user_name || 'System';
+    const userEmail = req.headers['x-user-email'] || req.body?.user_email || 'system@herb.com';
+    
+    // Determine action based on HTTP method and endpoint
+    let action = '';
+    let resourceType = 'other';
+    let resourceId = '';
+    let details = '';
+    let status = res.statusCode >= 200 && res.statusCode < 300 ? 'success' : 'error';
+    
+    const method = req.method;
+    const path = req.path;
+    
+    // Parse action and resource type from endpoint
+    if (path.includes('/orders')) {
+      resourceType = 'order';
+      if (method === 'POST') action = 'Created Order';
+      else if (method === 'PUT') action = 'Updated Order';
+      else if (method === 'DELETE') action = 'Deleted Order';
+      else if (method === 'GET') action = 'Viewed Orders';
+      else if (path.includes('/status')) action = 'Updated Order Status';
+      resourceId = req.params.id || 'multiple';
+    } else if (path.includes('/customers')) {
+      resourceType = 'customer';
+      if (method === 'POST') action = 'Created Customer';
+      else if (method === 'PUT') action = 'Updated Customer';
+      else if (method === 'DELETE') action = 'Deleted Customer';
+      else if (method === 'GET') action = 'Viewed Customers';
+      resourceId = req.params.id || 'multiple';
+    } else if (path.includes('/products')) {
+      resourceType = 'product';
+      if (method === 'POST') action = 'Created Product';
+      else if (method === 'PUT') action = 'Updated Product';
+      else if (method === 'DELETE') action = 'Deleted Product';
+      else if (method === 'GET') action = 'Viewed Products';
+      resourceId = req.params.id || 'multiple';
+    } else if (path.includes('/users')) {
+      resourceType = 'user';
+      if (method === 'POST') action = 'Created User';
+      else if (method === 'PUT') action = 'Updated User';
+      else if (method === 'DELETE') action = 'Deleted User';
+      else if (method === 'GET') action = 'Viewed Users';
+      resourceId = req.params.id || 'multiple';
+    } else if (path.includes('/visits')) {
+      resourceType = 'visit';
+      if (method === 'POST') action = 'Created Visit';
+      else if (method === 'PUT') action = 'Updated Visit';
+      else if (method === 'DELETE') action = 'Deleted Visit';
+      else if (method === 'GET') action = 'Viewed Visits';
+      resourceId = req.params.id || 'multiple';
+    } else if (path.includes('/customer-portals')) {
+      resourceType = 'customer-portal';
+      if (method === 'POST') action = 'Created Customer Portal';
+      else if (method === 'PUT') action = 'Updated Customer Portal';
+      else if (method === 'DELETE') action = 'Deleted Customer Portal';
+      else if (method === 'GET') action = 'Viewed Customer Portals';
+      resourceId = req.params.id || 'multiple';
+    } else if (path.includes('/login')) {
+      resourceType = 'login';
+      action = 'User Login';
+      resourceId = userId;
+    } else if (path.includes('/logout')) {
+      resourceType = 'logout';
+      action = 'User Logout';
+      resourceId = userId;
+    } else {
+      action = `${method} ${path}`;
+    }
+    
+    // Add details based on response
+    if (responseData && typeof responseData === 'string') {
+      try {
+        const parsedData = JSON.parse(responseData);
+        if (parsedData.message) details = parsedData.message;
+        else if (parsedData.name) details = `Resource: ${parsedData.name}`;
+        else if (parsedData.length) details = `Retrieved ${parsedData.length} items`;
+      } catch (e) {
+        details = `Response: ${responseData.substring(0, 100)}`;
+      }
+    }
+    
+    // Create audit log entry
+    const auditLog = {
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      user_id: userId,
+      user_name: userName,
+      user_email: userEmail,
+      action: action,
+      resource_type: resourceType,
+      resource_id: resourceId,
+      details: details,
+      ip_address: req.ip || req.connection.remoteAddress,
+      user_agent: req.headers['user-agent'] || 'Unknown',
+      method: method,
+      endpoint: path,
+      status: status,
+      response_code: res.statusCode
+    };
+    
+    // Add to system logs
+    data.system_logs.push(auditLog);
+    
+    // Keep only last 1000 logs to prevent file from growing too large
+    if (data.system_logs.length > 1000) {
+      data.system_logs = data.system_logs.slice(-1000);
+    }
+    
+    await writeData(data);
+    
+  } catch (error) {
+    console.error('Error logging audit event:', error);
+  }
 }
 
 // PRODUCTS API

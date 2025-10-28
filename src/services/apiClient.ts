@@ -290,6 +290,18 @@ class APIClient {
       method: 'DELETE',
     });
   }
+
+  // System Logs
+  async getSystemLogs() {
+    return this.request('/system-logs');
+  }
+
+  async createSystemLog(logData: any) {
+    return this.request('/system-logs', {
+      method: 'POST',
+      body: JSON.stringify(logData),
+    });
+  }
 }
 
 export const apiClient = new APIClient();
