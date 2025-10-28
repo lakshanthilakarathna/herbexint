@@ -5,6 +5,19 @@ const API_BASE_URL = window.location.hostname === 'localhost'
   : '/api';
 
 class APIClient {
+  // Helper method to get current user context
+  private getCurrentUser() {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        return JSON.parse(userStr);
+      }
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+    }
+    return null;
+  }
+
   // Helper method for API requests
   private async request(url: string, options: RequestInit = {}): Promise<any> {
     // Add cache busting for GET requests
@@ -13,11 +26,16 @@ class APIClient {
     const getUrl = options.method === 'GET' ? `${url}${cacheBuster}` : url;
     
     const fullUrl = `${API_BASE_URL}${getUrl}`;
+    
+    // Get current user for audit logging
+    const currentUser = this.getCurrentUser();
+    
     console.log('🌐 API Request:', {
       method: options.method || 'GET',
       url: fullUrl,
       baseUrl: API_BASE_URL,
-      originalUrl: url
+      originalUrl: url,
+      user: currentUser ? { id: currentUser.id, name: currentUser.name } : 'No user'
     });
     
     const response = await fetch(fullUrl, {
@@ -27,6 +45,12 @@ class APIClient {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
+        // Add user context for audit logging
+        ...(currentUser && {
+          'X-User-Id': currentUser.id,
+          'X-User-Name': currentUser.name,
+          'X-User-Email': currentUser.email || 'unknown@herb.com'
+        }),
         ...options.headers,
       },
     });

@@ -150,6 +150,20 @@ async function logUserActivity(req, res, responseData) {
     const userName = req.headers['x-user-name'] || req.body?.user_name || 'System';
     const userEmail = req.headers['x-user-email'] || req.body?.user_email || 'system@herb.com';
     
+    // Debug logging
+    console.log('🔍 Audit Log Debug:', {
+      path: req.path,
+      method: req.method,
+      userId: userId,
+      userName: userName,
+      userEmail: userEmail,
+      headers: {
+        'x-user-id': req.headers['x-user-id'],
+        'x-user-name': req.headers['x-user-name'],
+        'x-user-email': req.headers['x-user-email']
+      }
+    });
+    
     // Determine action based on HTTP method and endpoint
     let action = '';
     let resourceType = 'other';
@@ -376,7 +390,16 @@ app.get('/api/test', (req, res) => {
     message: 'Backend is running with latest updates', 
     timestamp: new Date().toISOString(),
     version: '1.1.0',
-    features: ['orders-complete', 'customer-portal-attribution']
+    features: ['orders-complete', 'customer-portal-attribution', 'audit-logging']
+  });
+});
+
+// Test audit logging endpoint
+app.post('/api/test-audit', (req, res) => {
+  res.json({ 
+    message: 'Audit test completed', 
+    timestamp: new Date().toISOString(),
+    testData: req.body
   });
 });
 
