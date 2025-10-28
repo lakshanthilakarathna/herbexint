@@ -135,13 +135,15 @@ export const getCurrentLocation = (options: LocationOptions = {}): Promise<Locat
 export const getLocationWithFallback = async (options: LocationOptions = {}): Promise<LocationData | null> => {
   console.log('🌍 Attempting GPS location capture...');
   
-  // Check if we're on HTTPS (required for GPS)
-  const isSecure = window.location.protocol === 'https:' || 
+  // Check if we're in a secure context (required for GPS)
+  const isSecure = window.isSecureContext || 
+                   window.location.protocol === 'https:' || 
                    window.location.hostname === 'localhost' || 
                    window.location.hostname === '127.0.0.1';
   
   if (!isSecure) {
-    throw new Error('GPS requires HTTPS. Please ensure you\'re using a secure connection (https://) or localhost.');
+    console.warn('⚠️ Not in a secure context, but attempting GPS anyway...');
+    // Don't throw error - modern browsers may still allow GPS
   }
   
   // Try GPS with high accuracy first
@@ -183,14 +185,16 @@ export const testGeolocationAvailability = (): Promise<{available: boolean, erro
       return;
     }
 
-    // Modern browsers support geolocation over HTTP if permissions are granted
-    // Only check for HTTPS if we're not in a secure context
-    const isSecureContext = window.isSecureContext || window.location.protocol === 'https:';
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    // Check for secure context - modern browsers support geolocation in secure contexts
+    const isSecureContext = window.isSecureContext || 
+                            window.location.protocol === 'https:' || 
+                            window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1';
     
-    if (!isSecureContext && !isLocalhost) {
-      // Try anyway - modern browsers may still allow it
+    if (!isSecureContext) {
       console.log('⚠️ Not a secure context, but attempting geolocation anyway...');
+    } else {
+      console.log('✅ Secure context detected - GPS should work');
     }
 
     // Try to get current position with minimal options

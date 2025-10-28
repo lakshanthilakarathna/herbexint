@@ -130,10 +130,26 @@
         }
 
         function checkHTTPS() {
-            const isSecure = location.protocol === 'https:' || location.hostname === 'localhost';
-            const message = isSecure 
-                ? '✅ HTTPS is enabled or running on localhost' 
-                : '❌ HTTPS is required for GPS functionality';
+            const isSecure = window.isSecureContext || 
+                             location.protocol === 'https:' || 
+                             location.hostname === 'localhost' || 
+                             location.hostname === '127.0.0.1';
+            
+            let message = '';
+            if (window.isSecureContext) {
+                message += '✅ window.isSecureContext: true<br>';
+            } else {
+                message += '❌ window.isSecureContext: false<br>';
+            }
+            
+            if (location.protocol === 'https:') {
+                message += '✅ Protocol: https://<br>';
+            } else {
+                message += `❌ Protocol: ${location.protocol}<br>`;
+            }
+            
+            message += `Hostname: ${location.hostname}<br>`;
+            message += `Overall: ${isSecure ? '✅ Secure context detected' : '❌ Not a secure context'}`;
             
             showResult('https-result', message, isSecure ? 'success' : 'error');
         }
