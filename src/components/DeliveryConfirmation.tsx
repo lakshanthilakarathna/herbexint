@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { Camera, MapPin, X, Check } from 'lucide-react';
 import { getLocationWithFallback } from '@/lib/locationUtils';
 import { 
-  optimizeImage, 
   validateImageFile, 
   validatePayloadSize, 
   formatBytes 
@@ -80,6 +79,9 @@ export const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
 
     try {
       toast.info('Optimizing photo...', { duration: 3000 });
+      
+      // Dynamic import for image optimization
+      const { optimizeImage } = await import('@/lib/imageOptimization');
       
       // Use comprehensive image optimization
       const result = await optimizeImage(file, {
