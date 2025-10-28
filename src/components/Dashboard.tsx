@@ -11,7 +11,6 @@ import {
   ShoppingCart, 
   Package, 
   TrendingUp, 
-  Settings, 
   FileText, 
   UserCheck, 
   Building2,
@@ -212,12 +211,6 @@ export const Dashboard: React.FC = () => {
       icon: Users,
       href: '/users',
       permission: 'users:read'
-    },
-    {
-      title: 'Settings',
-      icon: Settings,
-      href: '/settings',
-      permission: 'settings:read'
     },
     {
       title: 'Logs',

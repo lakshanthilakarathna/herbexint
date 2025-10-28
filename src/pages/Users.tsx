@@ -75,7 +75,6 @@ const Users: React.FC = () => {
             'visits:read', 'visits:write', 'visits:delete',
             'reports:read', 'reports:write',
             'users:read', 'users:write', 'users:delete',
-            'settings:read', 'settings:write',
             'audit:read'
           ],
           status: 'active',

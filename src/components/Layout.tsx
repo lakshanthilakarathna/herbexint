@@ -8,7 +8,6 @@ import {
   ShoppingCart, 
   Package, 
   TrendingUp, 
-  Settings, 
   FileText, 
   UserCheck, 
   Building2,
@@ -99,12 +98,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       icon: Users,
       href: '/users',
       permission: 'users:read'
-    },
-    {
-      title: 'Settings',
-      icon: Settings,
-      href: '/settings',
-      permission: 'settings:read'
     },
     {
       title: 'Logs',
@@ -230,12 +223,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             {hasPermission('users:read') && (
               <Button variant={location.pathname === '/users' ? "default" : "ghost"} className="w-full justify-start" onClick={() => navigate('/users')}>
                 <Users className="mr-2 h-4 w-4" />Users
-              </Button>
-            )}
-            {/* Settings */}
-            {hasPermission('settings:read') && (
-              <Button variant={location.pathname === '/settings' ? "default" : "ghost"} className="w-full justify-start" onClick={() => navigate('/settings')}>
-                <Settings className="mr-2 h-4 w-4" />Settings
               </Button>
             )}
             {/* Logs */}

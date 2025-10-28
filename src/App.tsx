@@ -108,18 +108,6 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute requiredPermissions={['settings:read']}>
-                    <Layout title="System Settings">
-                      <div className="p-8">
-                        <p>Settings functionality coming soon...</p>
-                      </div>
-                    </Layout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
                 path="/logs" 
                 element={
                   <ProtectedRoute requiredPermissions={['audit:read']}>
