@@ -233,7 +233,12 @@ app.get('/api/orders', async (req, res) => {
 
 // Test endpoint
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'Backend is running', timestamp: new Date().toISOString() });
+  res.json({ 
+    message: 'Backend is running with latest updates', 
+    timestamp: new Date().toISOString(),
+    version: '1.1.0',
+    features: ['orders-complete', 'customer-portal-attribution']
+  });
 });
 
 // Batch endpoint for initial page load
