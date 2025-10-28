@@ -27,11 +27,19 @@ const Reports: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Load data from API backend
-      const ordersData = await apiClient.getAllOrders();
+      // Load data from API backend - temporarily use getOrders until backend is updated
+      const ordersData = await apiClient.getOrders();
       const productsData = await apiClient.getProducts();
       const customersData = await apiClient.getCustomers();
       const usersData = await apiClient.getUsers();
+
+      console.log('Reports Debug:', {
+        ordersCount: ordersData.length,
+        productsCount: productsData.length,
+        customersCount: customersData.length,
+        usersCount: usersData.length,
+        orderCreatedBy: ordersData.map(o => o.created_by)
+      });
 
       setOrders(ordersData);
       setProducts(productsData);
@@ -86,7 +94,12 @@ const Reports: React.FC = () => {
   
   // Get sales reps (users with sales rep role)
   const getSalesReps = () => {
-    return users.filter(u => u.role_name === 'Sales Representative' || u.role_id === 'sales-rep-role-id');
+    const salesReps = users.filter(u => u.role_name === 'Sales Representative' || u.role_id === 'sales-rep-role-id');
+    console.log('Sales Reps Debug:', {
+      allUsers: users.map(u => ({ id: u.id, name: u.name, role_id: u.role_id, role_name: u.role_name })),
+      salesReps: salesReps.map(r => ({ id: r.id, name: r.name }))
+    });
+    return salesReps;
   };
 
   if (loading) {
