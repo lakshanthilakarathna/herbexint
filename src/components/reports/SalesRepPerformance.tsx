@@ -44,11 +44,13 @@ export const SalesRepPerformance: React.FC<SalesRepPerformanceProps> = ({ orders
   // Calculate metrics per rep
   const repPerformance = allReps.map(rep => {
     // Filter orders by created_by field (for internal orders) or created_by_user_id
+    // Now includes customer portal orders properly attributed to sales reps
     const repOrders = orders.filter((o: any) => 
       o.created_by === rep.id || 
       o.created_by_user_id === rep.id ||
       (rep.id === 'admin-user-id' && o.created_by === 'admin-user-id')
     );
+    
     const totalSales = repOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
     const orderCount = repOrders.length;
     const avgOrderValue = orderCount > 0 ? totalSales / orderCount : 0;
@@ -58,7 +60,9 @@ export const SalesRepPerformance: React.FC<SalesRepPerformanceProps> = ({ orders
       repName: rep.name,
       totalSales,
       orderCount,
-      avgOrderValue
+      avgOrderValue,
+      internalOrders: repOrders.filter((o: any) => o.source !== 'customer-portal').length,
+      customerPortalOrders: repOrders.filter((o: any) => o.source === 'customer-portal').length
     };
   })
     .filter(rep => rep.orderCount > 0) // Only show reps with orders
@@ -153,6 +157,10 @@ export const SalesRepPerformance: React.FC<SalesRepPerformanceProps> = ({ orders
                     <div className="text-xs text-gray-500 flex gap-4">
                       <span>{rep.orderCount} orders</span>
                       <span>Avg: Rs. {rep.avgOrderValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="text-xs text-gray-400 flex gap-3">
+                      <span>Internal: {rep.internalOrders}</span>
+                      <span>Portal: {rep.customerPortalOrders}</span>
                     </div>
                   </div>
                 );

@@ -51,9 +51,9 @@ export const Dashboard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Fetch real data from API
+      // Fetch real data from API - include customer portal orders
       const [ordersResponse, productsResponse] = await Promise.all([
-        apiClient.getOrders(),
+        apiClient.getAllOrders(), // Use getAllOrders to include customer portal orders
         apiClient.getProducts()
       ]);
       
@@ -63,8 +63,13 @@ export const Dashboard: React.FC = () => {
       // Filter orders based on user role
       const isAdmin = user?.role_id === 'admin-role-id';
       const orders = isAdmin 
-        ? allOrders  // Admin sees all orders
-        : allOrders.filter((o: any) => o.created_by === user?.id);  // Sales Rep sees only their orders
+        ? allOrders  // Admin sees all orders (internal + customer portal)
+        : allOrders.filter((o: any) => {
+            // Sales Rep sees their internal orders AND customer portal orders
+            return o.created_by === user?.id || 
+                   o.created_by_user_id === user?.id ||
+                   (o.source === 'customer-portal' && o.created_by === user?.id);
+          });
       
       // Calculate statistics from filtered orders
       const totalOrders = orders.length;

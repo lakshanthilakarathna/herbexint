@@ -255,14 +255,25 @@ app.get('/api/batch/dashboard', async (req, res) => {
 // Get all orders (including customer portal orders) for reports
 app.get('/api/orders-complete', async (req, res) => {
   const data = await readData();
-  const allOrders = [
-    ...(data.orders || []),
-    ...(data.customer_orders || []).map(co => ({
+  
+  // Map customer portal orders with proper attribution
+  const customerPortalOrders = (data.customer_orders || []).map(co => {
+    // Find the portal to get the created_by (sales rep) information
+    const portal = (data.customer_portals || []).find(p => p.id === co.portal_id);
+    
+    return {
       ...co,
       source: 'customer-portal',
       order_number: co.order_number || `CP-${co.id}`,
-      customer_id: co.portal_id
-    }))
+      customer_id: co.portal_id,
+      created_by: portal?.created_by || 'system', // Attribute to the sales rep who created the portal
+      created_by_user_id: portal?.created_by || 'system' // Alternative field for compatibility
+    };
+  });
+  
+  const allOrders = [
+    ...(data.orders || []),
+    ...customerPortalOrders
   ];
   res.json(allOrders);
 });
