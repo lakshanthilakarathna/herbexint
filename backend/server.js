@@ -10,13 +10,25 @@ const { generateAdminOrderNumber, generateSalesRepOrderNumber, generateCustomerP
 // Performance optimizations
 let dataCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 5000; // 5 seconds cache
+const CACHE_DURATION = 30000; // 30 seconds cache
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware - Performance optimizations
 app.use(compression()); // Enable gzip compression
+
+// Add cache headers for static resources
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/products') || req.path.startsWith('/api/customers')) {
+    // Cache product and customer data for 60 seconds
+    res.set('Cache-Control', 'public, max-age=60');
+  } else if (req.path.startsWith('/api/orders') || req.path.startsWith('/api/users')) {
+    // Don't cache orders and users (more dynamic)
+    res.set('Cache-Control', 'no-cache');
+  }
+  next();
+});
 
 // Middleware - Enhanced CORS configuration
 app.use(cors({
@@ -213,6 +225,22 @@ app.get('/api/orders', async (req, res) => {
 // Test endpoint
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Backend is running', timestamp: new Date().toISOString() });
+});
+
+// Batch endpoint for initial page load
+app.get('/api/batch/dashboard', async (req, res) => {
+  try {
+    const data = await readData();
+    res.json({
+      products: data.products || [],
+      customers: data.customers || [],
+      orders: data.orders || [],
+      users: data.users || []
+    });
+  } catch (error) {
+    console.error('Batch endpoint error:', error);
+    res.status(500).json({ error: 'Failed to fetch data' });
+  }
 });
 
 // Get all orders (including customer portal orders) for reports

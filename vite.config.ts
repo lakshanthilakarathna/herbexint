@@ -24,18 +24,40 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Split vendor libraries
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          // Core React
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          
+          // Radix UI components (split into smaller chunks)
+          'ui-core': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+            '@radix-ui/react-label'
+          ],
+          'ui-extended': [
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-radio-group'
+          ],
+          
+          // Charts library
           charts: ['recharts'],
-          utils: ['date-fns', 'lucide-react'],
-          // Keep GPS functions in main bundle to avoid loading issues
-          // location: ['@/lib/locationUtils'],
+          
+          // Utilities
+          utils: ['date-fns', 'lucide-react', 'clsx', 'tailwind-merge']
         },
+        
+        // Optimize chunk file names
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       },
     },
     // Enable compression
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 600, // Lower threshold to catch issues
+    // Enable CSS code splitting
+    cssCodeSplit: true,
   },
   // Enable gzip compression
   define: {

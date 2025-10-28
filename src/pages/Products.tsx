@@ -1244,7 +1244,7 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                     <div className="flex gap-3 mb-3">
                       <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
                         {product.image_url ? (
-                          <img src={product.image_url} alt={product.product_name} className="w-full h-full object-cover rounded" />
+                          <img src={product.image_url} alt={product.product_name} className="w-full h-full object-cover rounded" loading="lazy" decoding="async" />
                         ) : (
                           <Package className="w-8 h-8 text-gray-400" />
                         )}
@@ -1358,7 +1358,7 @@ Red Wine 750ml,6,2500,1800,3000,10% off on 100+,Imported wine,300,HerbWines`;
                   <TableCell>
                     <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
                       {product.image_url ? (
-                        <img src={product.image_url} alt={product.product_name} className="w-full h-full object-cover" />
+                        <img src={product.image_url} alt={product.product_name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <Package className="w-6 h-6 text-gray-400" />
                       )}

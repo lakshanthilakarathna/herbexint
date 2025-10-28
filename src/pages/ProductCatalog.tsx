@@ -206,6 +206,8 @@ const ProductCatalog: React.FC = () => {
                       src={product.image_url} 
                       alt={product.product_name}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <Package className="w-16 h-16 text-gray-400" />
