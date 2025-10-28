@@ -20,6 +20,15 @@ app.use(compression()); // Enable gzip compression
 
 // Add cache headers for static resources
 app.use((req, res, next) => {
+  // Set proper MIME types for JavaScript modules
+  if (req.path.endsWith('.js')) {
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+  } else if (req.path.endsWith('.mjs')) {
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+  } else if (req.path.endsWith('.css')) {
+    res.set('Content-Type', 'text/css; charset=utf-8');
+  }
+  
   if (req.path.startsWith('/api/products') || req.path.startsWith('/api/customers')) {
     // Cache product and customer data for 60 seconds
     res.set('Cache-Control', 'public, max-age=60');
