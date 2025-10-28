@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Test - HERB System</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            background: #fafafa;
+        }
+        .success { 
+            background-color: #d4edda; 
+            border-color: #28a745; 
+            color: #155724;
+        }
+        .error { 
+            background-color: #f8d7da; 
+            border-color: #dc3545; 
+            color: #721c24;
+        }
+        .warning { 
+            background-color: #fff3cd; 
+            border-color: #ffc107; 
+            color: #856404;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            overflow-x: auto; 
+            border: 1px solid #e9ecef;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 0;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-green { background-color: #28a745; }
+        .status-red { background-color: #dc3545; }
+        .status-yellow { background-color: #ffc107; }
+        .status-gray { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 GPS Location Test - HERB System</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Test Instructions</h3>
+            <p>This page helps you test GPS functionality for the HERB liquor wholesale management system. Use the buttons below to test different aspects of location services.</p>
+            <ul>
+                <li><strong>Browser Support:</strong> Check if your browser supports GPS</li>
+                <li><strong>HTTPS Check:</strong> Verify secure connection (required for GPS)</li>
+                <li><strong>Permission Check:</strong> Test location permissions</li>
+                <li><strong>Location Test:</strong> Try to get your current location</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3><span class="status-indicator status-gray" id="browser-status"></span>Browser Support Check</h3>
+            <div id="browser-support"></div>
+            <button class="btn-primary" onclick="checkBrowserSupport()">Check Browser Support</button>
+        </div>
+        
+        <div class="test-section">
+            <h3><span class="status-indicator status-gray" id="https-status"></span>HTTPS Check</h3>
+            <div id="https-check"></div>
+            <button class="btn-primary" onclick="checkHTTPS()">Check HTTPS</button>
+        </div>
+        
+        <div class="test-section">
+            <h3><span class="status-indicator status-gray" id="permission-status"></span>Permission Check</h3>
+            <div id="permission-check"></div>
+            <button class="btn-primary" onclick="checkPermissions()">Check Permissions</button>
+        </div>
+        
+        <div class="test-section">
+            <h3><span class="status-indicator status-gray" id="location-status"></span>Location Test</h3>
+            <div id="location-result"></div>
+            <button class="btn-success" onclick="testLocation()">Test Location</button>
+            <button class="btn-warning" onclick="testLocationHighAccuracy()">Test High Accuracy</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div id="test-summary"></div>
+            <button class="btn-primary" onclick="runAllTests()">Run All Tests</button>
+            <button class="btn-warning" onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📝 Console Logs</h3>
+            <div id="console-logs"></div>
+            <button class="btn-primary" onclick="clearLogs()">Clear Logs</button>
+        </div>
+    </div>
+
+    <script>
+        let logs = [];
+        let testResults = {
+            browser: false,
+            https: false,
+            permission: false,
+            location: false
+        };
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push(`[${timestamp}] ${message}`);
+            updateConsoleLogs();
+            console.log(message);
+        }
+        
+        function updateConsoleLogs() {
+            document.getElementById('console-logs').innerHTML = '<pre>' + logs.join('\n') + '</pre>';
+        }
+        
+        function updateStatusIndicator(elementId, status) {
+            const indicator = document.getElementById(elementId);
+            indicator.className = `status-indicator status-${status}`;
+        }
+        
+        function clearLogs() {
+            logs = [];
+            updateConsoleLogs();
+        }
+        
+        function clearResults() {
+            testResults = { browser: false, https: false, permission: false, location: false };
+            updateTestSummary();
+            clearLogs();
+        }
+        
+        function updateTestSummary() {
+            const summaryDiv = document.getElementById('test-summary');
+            const passed = Object.values(testResults).filter(Boolean).length;
+            const total = Object.keys(testResults).length;
+            
+            let summary = `<strong>Test Results: ${passed}/${total} passed</strong><br><br>`;
+            summary += `✅ Browser Support: ${testResults.browser ? 'PASS' : 'FAIL'}<br>`;
+            summary += `✅ HTTPS: ${testResults.https ? 'PASS' : 'FAIL'}<br>`;
+            summary += `✅ Permissions: ${testResults.permission ? 'PASS' : 'FAIL'}<br>`;
+            summary += `✅ Location: ${testResults.location ? 'PASS' : 'FAIL'}<br>`;
+            
+            if (passed === total) {
+                summary += '<br><div class="success"><strong>🎉 All tests passed! GPS should work in the HERB system.</strong></div>';
+            } else {
+                summary += '<br><div class="error"><strong>⚠️ Some tests failed. GPS may not work properly.</strong></div>';
+            }
+            
+            summaryDiv.innerHTML = summary;
+        }
+        
+        // Browser support check
+        function checkBrowserSupport() {
+            const supportDiv = document.getElementById('browser-support');
+            if (navigator.geolocation) {
+                supportDiv.innerHTML = '<div class="success">✅ Geolocation API is supported by this browser</div>';
+                updateStatusIndicator('browser-status', 'green');
+                testResults.browser = true;
+                log('✅ Geolocation API is supported');
+            } else {
+                supportDiv.innerHTML = '<div class="error">❌ Geolocation API is not supported by this browser</div>';
+                updateStatusIndicator('browser-status', 'red');
+                testResults.browser = false;
+                log('❌ Geolocation API is not supported', 'error');
+            }
+            updateTestSummary();
+        }
+        
+        // HTTPS check
+        function checkHTTPS() {
+            const httpsDiv = document.getElementById('https-check');
+            const isSecure = window.location.protocol === 'https:' || 
+                           window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
+            
+            if (isSecure) {
+                httpsDiv.innerHTML = '<div class="success">✅ Secure context detected (HTTPS or localhost)</div>';
+                updateStatusIndicator('https-status', 'green');
+                testResults.https = true;
+                log('✅ Secure context detected');
+            } else {
+                httpsDiv.innerHTML = '<div class="error">❌ Not a secure context - GPS will not work on HTTP</div>';
+                updateStatusIndicator('https-status', 'red');
+                testResults.https = false;
+                log('❌ Not a secure context - GPS will not work', 'error');
+            }
+            updateTestSummary();
+        }
+        
+        // Permission check
+        async function checkPermissions() {
+            const permissionDiv = document.getElementById('permission-check');
+            
+            if ('permissions' in navigator) {
+                try {
+                    const permission = await navigator.permissions.query({ name: 'geolocation' });
+                    log(`Permission state: ${permission.state}`);
+                    
+                    if (permission.state === 'granted') {
+                        permissionDiv.innerHTML = '<div class="success">✅ Location permission granted</div>';
+                        updateStatusIndicator('permission-status', 'green');
+                        testResults.permission = true;
+                    } else if (permission.state === 'denied') {
+                        permissionDiv.innerHTML = '<div class="error">❌ Location permission denied - Please allow location access</div>';
+                        updateStatusIndicator('permission-status', 'red');
+                        testResults.permission = false;
+                    } else {
+                        permissionDiv.innerHTML = '<div class="warning">⚠️ Location permission prompt - Will ask for permission when needed</div>';
+                        updateStatusIndicator('permission-status', 'yellow');
+                        testResults.permission = true; // Prompt is OK
+                    }
+                } catch (error) {
+                    permissionDiv.innerHTML = '<div class="warning">⚠️ Could not check permissions - Will try when needed</div>';
+                    updateStatusIndicator('permission-status', 'yellow');
+                    testResults.permission = true; // Assume OK if can't check
+                    log(`Permission check error: ${error.message}`, 'warning');
+                }
+            } else {
+                permissionDiv.innerHTML = '<div class="warning">⚠️ Permissions API not supported - Will try when needed</div>';
+                updateStatusIndicator('permission-status', 'yellow');
+                testResults.permission = true; // Assume OK if can't check
+                log('Permissions API not supported', 'warning');
+            }
+            updateTestSummary();
+        }
+        
+        // Location test
+        function testLocation() {
+            const resultDiv = document.getElementById('location-result');
+            resultDiv.innerHTML = '<div class="info">Testing location...</div>';
+            updateStatusIndicator('location-status', 'yellow');
+            log('Starting location test...');
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    const result = `✅ Location captured successfully!
+Latitude: ${latitude}
+Longitude: ${longitude}
+Accuracy: ${accuracy} meters
+Timestamp: ${new Date(position.timestamp).toLocaleString()}`;
+                    
+                    resultDiv.innerHTML = `<div class="success"><pre>${result}</pre></div>`;
+                    updateStatusIndicator('location-status', 'green');
+                    testResults.location = true;
+                    log(`✅ Location captured: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`);
+                    updateTestSummary();
+                },
+                (error) => {
+                    let errorMsg = `❌ Location error: ${error.message}`;
+                    if (error.code === 1) errorMsg += ' (Permission denied)';
+                    else if (error.code === 2) errorMsg += ' (Position unavailable)';
+                    else if (error.code === 3) errorMsg += ' (Timeout)';
+                    
+                    resultDiv.innerHTML = `<div class="error"><pre>${errorMsg}</pre></div>`;
+                    updateStatusIndicator('location-status', 'red');
+                    testResults.location = false;
+                    log(`❌ Location error: ${error.message} (code: ${error.code})`, 'error');
+                    updateTestSummary();
+                },
+                {
+                    enableHighAccuracy: false,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        }
+        
+        // High accuracy location test
+        function testLocationHighAccuracy() {
+            const resultDiv = document.getElementById('location-result');
+            resultDiv.innerHTML = '<div class="info">Testing high accuracy location...</div>';
+            updateStatusIndicator('location-status', 'yellow');
+            log('Starting high accuracy location test...');
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    const result = `✅ High accuracy location captured!
+Latitude: ${latitude}
+Longitude: ${longitude}
+Accuracy: ${accuracy} meters
+Timestamp: ${new Date(position.timestamp).toLocaleString()}`;
+                    
+                    resultDiv.innerHTML = `<div class="success"><pre>${result}</pre></div>`;
+                    updateStatusIndicator('location-status', 'green');
+                    testResults.location = true;
+                    log(`✅ High accuracy location captured: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`);
+                    updateTestSummary();
+                },
+                (error) => {
+                    let errorMsg = `❌ High accuracy location error: ${error.message}`;
+                    if (error.code === 1) errorMsg += ' (Permission denied)';
+                    else if (error.code === 2) errorMsg += ' (Position unavailable)';
+                    else if (error.code === 3) errorMsg += ' (Timeout)';
+                    
+                    resultDiv.innerHTML = `<div class="error"><pre>${errorMsg}</pre></div>`;
+                    updateStatusIndicator('location-status', 'red');
+                    testResults.location = false;
+                    log(`❌ High accuracy location error: ${error.message} (code: ${error.code})`, 'error');
+                    updateTestSummary();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+        }
+        
+        // Run all tests
+        async function runAllTests() {
+            log('🚀 Running all GPS tests...');
+            clearResults();
+            
+            checkBrowserSupport();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            checkHTTPS();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await checkPermissions();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            testLocation();
+        }
+        
+        // Initialize tests on page load
+        window.onload = function() {
+            log('🌍 GPS Test Page Loaded');
+            runAllTests();
+        };
+    </script>
+</body>
+</html>

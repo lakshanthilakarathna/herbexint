@@ -29,6 +29,8 @@ export default defineConfig(({ mode }) => ({
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
           charts: ['recharts'],
           utils: ['date-fns', 'lucide-react'],
+          // Keep GPS functions in main bundle to avoid loading issues
+          // location: ['@/lib/locationUtils'],
         },
       },
     },
