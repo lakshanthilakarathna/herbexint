@@ -14,7 +14,7 @@ import { apiClient } from '@/services/apiClient';
 import { toast } from "sonner";
 import { Plus, Search, Filter, Eye, Edit, Trash2, Clock, CheckCircle, XCircle, AlertCircle, Calendar, User, Target, ExternalLink, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getLocationWithFallback, LocationData, testGeolocationAvailability } from '@/lib/locationUtils';
+import { getLocationWithFallback, LocationData } from '@/lib/locationUtils';
 
 interface Visit {
   id: string;
@@ -137,22 +137,6 @@ const Visits: React.FC = () => {
 
 
 
-  // Test GPS functionality
-  const testGPS = async () => {
-    try {
-      toast.info('Testing GPS...', { duration: 2000 });
-      const result = await testGeolocationAvailability();
-      
-      if (result.available) {
-        toast.success('GPS is available and working!', { duration: 3000 });
-      } else {
-        toast.error(`GPS Error: ${result.error}`, { duration: 5000 });
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'GPS test failed';
-      toast.error(`GPS Test Error: ${errorMessage}`, { duration: 5000 });
-    }
-  };
 
   const handleCreateVisit = async () => {
     try {
@@ -603,18 +587,6 @@ const Visits: React.FC = () => {
                     💡 Only sales reps can confirm their own visits
                   </span>
                 )}
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-gray-600">GPS Status:</span>
-                  <button 
-                    onClick={testGPS}
-                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                  >
-                    Test GPS
-                  </button>
-                  <span className="text-xs text-gray-500">
-                    💡 GPS automatically captures location during visit creation and confirmation
-                  </span>
-                </div>
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
