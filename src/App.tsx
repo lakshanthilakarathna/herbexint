@@ -10,22 +10,36 @@ import { Layout } from './components/Layout';
 import { LoginForm } from './components/LoginForm';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-// Lazy load page components for better performance
-const Dashboard = lazy(() => import('./components/Dashboard'));
-const Orders = lazy(() => import('./pages/Orders'));
-const Customers = lazy(() => import('./pages/Customers'));
-const Products = lazy(() => import('./pages/Products'));
-const Visits = lazy(() => import('./pages/Visits'));
-const Users = lazy(() => import('./pages/Users'));
-const SystemLogs = lazy(() => import('./pages/SystemLogs'));
-const CustomerPortal = lazy(() => import('./pages/CustomerPortal'));
-const CustomerPortals = lazy(() => import('./pages/CustomerPortals'));
-const ProductCatalog = lazy(() => import('./pages/ProductCatalog'));
-const SharedCatalogs = lazy(() => import('./pages/SharedCatalogs'));
-const Reports = lazy(() => import('./pages/Reports'));
-const Deliveries = lazy(() => import('./pages/Deliveries'));
-const Index = lazy(() => import("./pages/Index"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Lazy load page components for better performance with retry
+const lazyWithRetry = (importFunc: () => Promise<any>) => {
+  return lazy(() => 
+    importFunc().catch((error) => {
+      console.error('Failed to load component:', error);
+      // Retry once after a short delay
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(importFunc());
+        }, 1000);
+      });
+    })
+  );
+};
+
+const Dashboard = lazyWithRetry(() => import('./components/Dashboard'));
+const Orders = lazyWithRetry(() => import('./pages/Orders'));
+const Customers = lazyWithRetry(() => import('./pages/Customers'));
+const Products = lazyWithRetry(() => import('./pages/Products'));
+const Visits = lazyWithRetry(() => import('./pages/Visits'));
+const Users = lazyWithRetry(() => import('./pages/Users'));
+const SystemLogs = lazyWithRetry(() => import('./pages/SystemLogs'));
+const CustomerPortal = lazyWithRetry(() => import('./pages/CustomerPortal'));
+const CustomerPortals = lazyWithRetry(() => import('./pages/CustomerPortals'));
+const ProductCatalog = lazyWithRetry(() => import('./pages/ProductCatalog'));
+const SharedCatalogs = lazyWithRetry(() => import('./pages/SharedCatalogs'));
+const Reports = lazyWithRetry(() => import('./pages/Reports'));
+const Deliveries = lazyWithRetry(() => import('./pages/Deliveries'));
+const Index = lazyWithRetry(() => import("./pages/Index"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
