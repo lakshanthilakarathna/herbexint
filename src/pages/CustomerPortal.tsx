@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { generateCustomerPortalOrderNumber } from '@/lib/orderNumberGenerator';
+import { getLocationWithFallback } from '@/lib/locationUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +59,12 @@ interface CustomerOrder {
   delivery_date?: string;
   items: OrderItem[];
   notes?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+    timestamp: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -280,6 +287,41 @@ const CustomerPortal: React.FC = () => {
         return;
       }
 
+      // Automatically capture location for the order
+      let locationData = undefined;
+      try {
+        toast.info('Getting your location... Please wait', { duration: 3000 });
+        console.log('🌍 Attempting to get location for customer portal order tracking...');
+        
+        const location = await getLocationWithFallback();
+        if (location) {
+          locationData = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            timestamp: new Date().toISOString()
+          };
+          
+          // Check if it's a fallback location
+          if (location.address.includes('Fallback') || location.address.includes('HTTP connection') || location.address.includes('IP-based location')) {
+            toast.warning(`Using approximate location: ${location.address}`, { duration: 5000 });
+          } else {
+            toast.success(`Location captured: ${location.address}`, { duration: 4000 });
+          }
+          console.log('✅ Location data captured for customer portal order:', locationData);
+        } else {
+          console.log('ℹ️ No location data available - customer portal order will be created without location tracking');
+          toast.warning('Could not capture GPS location. Order will be created without location tracking.', { duration: 6000 });
+        }
+      } catch (error) {
+        console.log('ℹ️ Location capture failed - customer portal order will be created without location tracking:', error);
+        if (error.message.includes('HTTPS')) {
+          toast.error('GPS location requires HTTPS. Please enable HTTPS on your server for GPS location tracking.', { duration: 8000 });
+        } else {
+          toast.warning('GPS location capture failed. Please check your browser location permissions and try again. Order will be created without location tracking.', { duration: 6000 });
+        }
+      }
+
       const orderNumber = generateCustomerPortalOrderNumber();
       
       const newOrder: CustomerOrder = {
@@ -295,6 +337,7 @@ const CustomerPortal: React.FC = () => {
         notes: orderForm.notes,
         status: 'pending',
         order_date: new Date().toISOString(),
+        location: locationData, // Add location data
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -315,6 +358,7 @@ const CustomerPortal: React.FC = () => {
         delivery_date: '',
         items: newOrder.items,
         notes: orderForm.notes || '',
+        location: locationData, // Add location data to API call
         created_by: 'customer-portal',
         created_at: newOrder.created_at,
         updated_at: newOrder.updated_at
